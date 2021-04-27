@@ -1,97 +1,92 @@
-(*fonctions a une seule variable*)
-type ope_unaire = Moins | Inv;;
-
-type ope_binaire = Plus | Fois;;
-
-type borne = Ouvert of float | Ferme of float;;
-
-type interval = borne*borne;;
-
-type unionintervaux = interval list;;
+(*open Misc;;*)
 
 
-type fonct = {d_d : unionintervaux ;
-			  d_a : unionintervaux ;
-			  expression : expr ;
-			  derivee : fonct ;
-			  evaluation : float -> float}
-and expr = Aucune | 
-		   C of float | 
-		   Ou of ope_unaire*expr | 
-		   Ob of ope_binaire*expr*expr | 
-		   Var | 
-		   Fonc of fonct;; 
+type operation = {nbvar : int ;affichage : string ; evaluation : float array->float ; derive : deriv}
+and expression = 
+    C of float |
+    V of int |
+    F of operation * (expression array)
+and deriv = NonDeriv | Deriv of ((expression array)->(expression -> expression) -> expression);;
 
-let rec enlevepoint d x = match d with
-  |[]->[];
-  |t::q-> match t with 
-    |(Ouvert(ia),Ouvert(ib)) -> if ia<0. && ib>0. then (Ouvert(ia),Ouvert(0.))::(Ouvert(0.),Ouvert(ib))::(enlevepoint q x) 
-                                  else t::(enlevepoint q x);
-    |(Ouvert(ia),Ferme(ib)) -> if ib=0. then (Ouvert(ia),Ouvert(ib))::(enlevepoint q x) 
-                                 else t::(enlevepoint q x);
-    |(Ferme(ia),Ouvert(ib)) -> if ia=0. 
-                                 then (Ouvert(ia),Ouvert(ib))::(enlevepoint q x) else t::(enlevepoint q x);
-    |(Ferme(ia),Ferme(ib)) -> if ia<0. && ib>0. then (Ferme(ia),Ouvert(0.))::(Ouvert(0.),Ferme(ib))::(enlevepoint q x) else 
-                      if ia=0. then (Ouvert(ia),Ferme(ib))::(enlevepoint q x) else
-                      if ib=0. then (Ferme(ia),Ouvert(ib))::(enlevepoint q x) else
-                      t::(enlevepoint q x)
-    ;;
+let rec plus = {nbvar=2;
+			affichage="%|0;%+%|1;%" ; 
+			evaluation = (fun v->v.(0) +. v.(1) ) ; 
+			derive = Deriv(fun ar d -> F(plus,[|d ar.(0);d ar.(1)|]) )
+			} ;;
 
+let rec oppose = {nbvar=1;
+			affichage="-%|0;%";
+			evaluation = (fun v-> 0.-.v.(0)) ;
+			derive = Deriv(fun ar d -> F(oppose, [|d ar.(0)|]))
+			} ;;
 
-let rec evalue expr v = match expr with
-  |C(x) -> x
-  |Var -> v
-  |Ob(Plus,x,y) -> (evalue x v) +. (evalue y v)
-  |Ob(Fois,x,y) -> (evalue x v) *. (evalue y v)
-  |Ou(Moins,x) -> -. (evalue x v)
-  |Ou(Inv,x) -> 1. /. (evalue x v)
-  |Fonc(f) -> f.evaluation v;;
+let rec fois = {nbvar=2;
+			affichage="%|0;%*%|1;%";
+			evaluation = (fun v-> v.(0) *. v.(1) ) ;
+			derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))
+			} ;;
 
-let uneexpression = (Ob(Plus,
-                    Ob(Plus,
-                      Ob(Fois,
-                        Var,
-                        Var),
-                      Ou(Moins,
-                        Var)),
-                    C(4.))) 
-                  ;;
+let rec inverse = {nbvar=1;
+			affichage="frac{1}{%|0;%}";
+			evaluation = (fun v-> 1./.v.(0));
+			derive = Deriv(fun ar d -> F(oppose,[|F(fois,[|d ar.(0) ; F(inverse,[|F(fois,[|ar.(0);ar.(0)|])|])|])|] ) )
+			};;
+
+let rec ln = {nbvar=1;
+			affichage="ln(%|0;%)";
+			evaluation= (fun v -> log v.(0));
+			derive = Deriv(fun ar d -> F(fois, [|d ar.(0) ; F(inverse,[|ar.(0)|])|]))
+			};;
+
+let rec exponentielle = {nbvar = 1;
+			affichage="exp(%|0;%)";
+			evaluation = (fun v-> exp v.(0));
+			derive = Deriv(fun ar d -> F(fois, [|d ar.(0);F(exponentielle,[|ar.(0)|])|] ))
+			};;
 
 
-let rec clarifie expr = match expr with
-  |C(x) -> C(x)
-  |Var -> Var
-  |Ob(Plus,x,C(0.))->x;
-  |Ob(Plus,C(0.),y)->y
-  |Ob(Plus,x,y) -> Ob(Plus, (clarifie x), (clarifie y))
-  |Ob(Fois,C(0.),y) -> C(0.)
-  |Ob(Fois,x,C(0.)) -> C(0.)
-  |Ob(Fois,x,C(1.)) -> x
-  |Ob(Fois,C(1.),y) -> y
-  |Ob(Fois,x,y) -> Ob(Fois, (clarifie x),(clarifie y))
-  |Ou(Moins,x) -> Ou(Moins, clarifie x)
-  |Ou(Inv,x) ->  Ou(Inv, clarifie x )
-  |Fonc(f) -> Fonc(f);;
+let rec evalue f v = match f with
+    |C(x) -> x
+    |V(i) -> v.(i)
+    |F(g,fa) -> g.evaluation (Array.mapi (fun i unef-> evalue unef v) fa );;
 
-let rec compose a b = match a with
-  |C(x) -> C(x)
-  |Var -> b
-  |Ob(u,v,w) -> Ob(u, compose v b, compose w b)
-  |Ou(u,v) -> Ou (u,compose v b)
-  |Fonc(f) -> if f.expr = Aucune then {d_d=f.d_d ; d_a = f.d}
+let rec affiche f = match f with
+    |C(x) -> string_of_float x
+    |V(i) -> "{x_{"^(string_of_int i)^"}}"
+    |F(g,va) -> evaluelatex (g.nbvar) (fun a -> List.rev (explode (affiche va.(a)))) (g.affichage);;
 
-let rec enstring expr = match expr with
-  |C(x) -> string_of_float x;
-  |Var -> "x";
-  |Ob(Plus,x,y) -> "("^(enstring x)^"+"^(enstring y)^")";
-  |Ob(Fois,x,y) -> "("^(enstring x)^"*"^(enstring y)^")";
-  |Ou(Moins,x) -> "-"^(enstring x);
-  |Ou(Inv,x) -> "(1/"^(enstring x)^")";;
+let rec compose f garr = match f with
+	|C(x)->C(x)
+	|V(i)->garr.(i)
+	|F(ge,fa) -> F(ge,Array.map (fun fi -> compose fi garr) fa);;
 
-let rec derive expr = match expr with
-  |C(x) -> C(0.);
-  |Var -> C(1.);
-  |Ob(Plus,x,y) -> Ob(Plus, (derive x), (derive y));
-  |Ob(Fois,x,y) -> Ob(Plus, Ob(Fois, (derive x), y), Ob(Fois, (derive y), x));
-  |Ou(Moins,x) -> Ou(Moins, derive x);
-  |Ou(Inv,x) ->  Ou(Moins, Ob(Fois, (derive x), Ou(Moins, Ob(Fois, x , x))));;
+(*\frac{\partial f}{\partial x_k}*)
+let rec derive k f = match f with
+	|C(x)->C(0.);
+	|V(i)-> if i=k then C(1.) else C(0.);
+	|F(g,va) -> match g.derive with 
+		|NonDeriv->failwith "Fonction non derivable !";
+		|Deriv(laf)->laf va (derive k);;
+
+let exponentielle_base = 
+			let vraiefonction = (F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ) in
+			{
+			nbvar=2;
+			affichage="%|0;%^%|1;%" ; 
+			evaluation= evalue vraiefonction;
+			derive = Deriv(fun ar d -> d (compose vraiefonction [|ar.(0);ar.(1)|]) )
+			} ;;
+
+(* (x,y) |-> x^y+y^x *)
+let unefonctionsympas = F(plus,[|
+								F(exponentielle_base,[| V 0 ; V 1 |] );
+                                F(exponentielle_base,[| V 1 ; V 0 |] )
+                               |]);;
+
+evalue unefonctionsympas [|2.;3.|];;
+
+affiche unefonctionsympas;;
+
+affiche (F(inverse, [|V 0|]));;
+
+affiche (derive 0 unefonctionsympas);;

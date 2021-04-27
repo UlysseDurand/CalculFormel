@@ -1,10 +1,9 @@
-open Misc;;
+(*open Misc;;
 open Groupe;;
-print_string (enstring expression);;print_newline ();;
-print_string (enstring (clarifie (derive expression)));;
-prin
+open Analyse2;;*)
 (*les groupes c'est marrant*)
 
-affiche_matrix print_int (matrice_groupe_fini (groupezsurnz 5));;
+(* affiche_matrix print_int (matrice_groupe_fini (groupezsurnz 5));; *)
 
-verifie_groupe_fini (groupezsurnz 5);;
+(* verifie_groupe_fini (groupezsurnz 5);; *)
+
