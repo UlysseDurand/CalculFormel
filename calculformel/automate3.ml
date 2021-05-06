@@ -15,6 +15,7 @@ let rec unvraiteretourne f l casbase =  (*print_string "ok ! ";*)match l with
 	|[] -> (false,casbase)
 	|x::xs ->let (a,b) = f x in if a then (a,b) else unvraiteretourne f xs casbase;;
 
+type pattern = string*int;;
 
 
 (*########## LES TYPES ##########*)
@@ -106,8 +107,8 @@ let rec deltaetoile_prio_quiecrit (qq,i,f,delta) puits ((q,aecr),m) = match m wi
 (*avec l'espace d'ecriture 'sig qui a un vide et une operation de concatenation
 un automate priorisant qui ecrit dans 'sig ayant un puits (etat non final sans transition externe)*)
 let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) =
-	let neutre,concat = esecr.neutre, esecr.operation in(*
-	print_string "je suis aaaaaaici";*)
+	let neutre,concat = esecr.neutre, esecr.operation in
+	(* print_string (implode m);print_string " : ";print_string (implode aecr.(0));print_newline (); *)
 	match m with
 	|[] -> ((f (q,aecr)),esecr.neutre)
 	|x::xs -> 
@@ -116,7 +117,7 @@ let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) 
 			(
 				fun (unq,motdureste) -> 
 					let (a,b) = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in 
-					(a,concat aecr b)
+					(a,concat motdureste b)
 			)
 			(delteta ((q,aecr),x))
             neutre
@@ -156,7 +157,7 @@ let rec ajoufin autoa autob lpass =
 let rec agraphefin autoa autob = 
 	let (especr1,(leq1,i1,f1,d1))=autoa in 
 	let (especr2,(leq2,i2,f2,d2))=autob in
-	let phi (q,aecr) = (*print_string "AAAH : ";print_int (List.length aecr.(0));*) fun (a,b)-> if a= fst (List.hd i2) then (q,b) else (a,b) in
+	let phi (q,aecr) = fun (a,b)-> if a= fst (List.hd i2) then (q,b) else (a,b) in
 	let d3 (q,l) = 
 		if (leq1 q) 
 		then
@@ -197,8 +198,6 @@ let dernier_espaceecriture n = {neutre = arrayvide n; operation = dernier_ope};;
 
 
  
-let affichetrucs ((q,m),l) = print_string ("salut ! "^(string_of_int q)^" "^(Char.escaped l)^" au revoir ")
-
 
 let recovar n id a delim = 
 	Aut(
@@ -223,7 +222,7 @@ let autonaze n id puits lett =
 				(fun (q,m)->q=id),
 				[id,arrayvide n],
 				(fun (q,m)->q=id),
-				(fun ((q,m),l)->(*print_int q;*)(*affichetrucs ((q,m),l);*)if q=id then [(puits,dernier_ope (arrayvide n) m)] else failwith ("olala ! "^(Char.escaped lett)^", id "^(string_of_int id)^",mais etat "^(string_of_int q)))
+				(fun ((q,m),l)->(*affichetrucs ((q,m),l);*)if q=id then [(puits,dernier_ope (arrayvide n) m)] else failwith ("olala ! "^(Char.escaped lett)^", id "^(string_of_int id)^",mais etat "^(string_of_int q)))
 			)
 		)
 	);;
@@ -270,5 +269,23 @@ let deltadugrosautomate acc n ((q,mem),l) =
 
 let letatinitial n = autonaze n 0 (-1) '%';;
 let legrosautomate n = (espaceecriture_autoprio,((fun x->true),((0,(0,[],0,0)),letatinitial n),(fun x -> x=0),deltadugrosautomate (ref 1) n));;
+let ajoutelafin n aut puits etafin = match aut with
+	|AutoVide->AutoVide
+	|AutDom(d,lauto)->aut
+	|Aut(d,lauto)->ajoutefin aut (recovar n etafin 0 '%');;
 
+let prendlautquiecr aut = match aut with
+    |AutoVide -> failwith "pas d'autoQe ici"
+    |AutDom(l,levraiautoqe) -> levraiautoqe
+    |Aut(l,levraiautoqe) -> levraiautoqe;;
+
+let levaluation mot (exp_pattern,n) = 
+    let levraiauto = prendlautquiecr (ajoutelafin n (executeautomate (legrosautomate n) (explode exp_pattern)) (-1) (-2)) in 
+    deltetaetoile_prio_quiecrit levraiauto (-1) ((0,arrayvide n),mot);;
+
+let pattern_match lp mot = unvraiteretourne (levaluation mot) lp [|[]|];;
+
+let lalistedepatt = [("frac{%|0;%}{%|1;%}",2);("%|0;%*%|1;%",2);("%|0%+%|1%",2)];;
+
+(* pattern_match lalistedepatt (explode "frac{5*7}{3+6*3}");; *)
 

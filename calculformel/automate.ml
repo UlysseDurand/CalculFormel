@@ -75,15 +75,3 @@ let rec lerendv a = ['x';'_']@['{']@(List.rev (explode (string_of_int a ) ))@['}
 let automatelatex n rendv = AutQe( (0,(0,[],0,0)) , (fun (q,mem) -> q=0) ,(lafonct n rendv));;
 
 let evaluelatex n rendv txt = implode (List.rev (executautomate (automatelatex n rendv) (List.rev(explode txt))));;
-
-
-
-print_newline ();;
-let letext = "\\frac{{%|0;%+%|15;%}^{(%*|1-4;%)}}{%+|a;%}";;print_string letext;print_newline ();;
-print_newline ();;
-print_string (evaluelatex 6 lerendv letext);;
-print_newline ();;
-
-
-
-(*ON SE LANCE DANS LE PARSER*)

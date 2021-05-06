@@ -1,9 +1,11 @@
 (*open Misc;;
 open Groupe;;
-open Analyse2;;*)
-(*les groupes c'est marrant*)
+open Analyse;;
+open Analyse3;;*)
 
-(* affiche_matrix print_int (matrice_groupe_fini (groupezsurnz 5));; *)
+let exprlatexa = "frac{x_0+x_1}{ln(x_0-x_1)}";;
+let expra = latex_en_expression exprlatexa;;
+let exprb = derive 0 expra;;
+let exprlatexb = affiche exprb;;
 
-(* verifie_groupe_fini (groupezsurnz 5);; *)
-
+ecritdansfichier "res.txt" [exprlatexa^"\\\\" ; exprlatexb];;

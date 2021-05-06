@@ -8,13 +8,11 @@ let prendlaut aut = match aut with
     |AutDom(l,(espp,levraiauto)) -> levraiauto
     |Aut(l,(espp,levraiauto)) -> levraiauto;;
 
-let prendlautquiecr aut = match aut with
-    |AutoVide -> failwith "pas d'autoQe ici"
-    |AutDom(l,levraiautoqe) -> levraiautoqe
-    |Aut(l,levraiautoqe) -> levraiautoqe;;
 
-(*
-let sujetdetest = (executeautomate (legrosautomate 1) (explode lepattern));;*)
+let lepattern = "sal%|0;%";;
+
+
+let sujetdetest = (executeautomate (legrosautomate 1) (explode lepattern));;
 
 let untest x t a = let (qq,i,f,delteta) = prendlaut x in delteta (t,a);;
 let unotrtest x a = let (qq,i,f,delteta) = prendlaut x in qq (a);;
@@ -28,7 +26,8 @@ let unotrtest x a = let (qq,i,f,delteta) = prendlaut x in qq (a);;
 
  (* (afficheautomate 0 autrautomate [(-1,'s');(1,'a')]);; *)(*
 unotrtest sujetdetest (3,[|[]|]);;
-untest sujetdetest (0,[|[]|]) 's';;
+untest sujetdetest (3,[|[]|]) 'o';;
+deltetaetoile_prio_quiecrit (prendlautquiecr sujetdetest) (-1) ((0,[|[]|]),(explode "salga"));;
 untest sujetdetest (1,[|[]|]) 'a';;
 untest sujetdetest (2,[|[]|]) 'l';;
 untest sujetdetest (3,[|[]|]) 't';;
@@ -38,13 +37,7 @@ untest sujetdetest (4,[|[]|]) 'u';;
  *)(*
 prendlautquiecr sujetdetest;;*)
 
-let lepattern = "sal%|0;%ut";;
-
-let levaluation n pattern = 
-    fun mot ->  
-        let levraiauto = prendlautquiecr (executeautomate (legrosautomate n) (explode pattern)) in 
-        deltetaetoile_prio_quiecrit levraiauto (-1) ((0,arrayvide n),mot);;
 
 
-let motareconnaitre = explode "saltinbanqut";;
-levaluation 1 lepattern motareconnaitre;;
+(* let motareconnaitre = explode "saligo";; *)
+(* levaluation motareconnaitre (lepattern,1);; *)

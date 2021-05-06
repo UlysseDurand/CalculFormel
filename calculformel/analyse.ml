@@ -1,4 +1,6 @@
-(*open Misc;;*)
+(*open Misc;;
+open Automate;;
+open Automate3;;*)
 
 
 type operation = {nbvar : int ;affichage : string ; evaluation : float array->float ; derive : deriv}
@@ -21,7 +23,7 @@ let rec oppose = {nbvar=1;
 			} ;;
 
 let rec fois = {nbvar=2;
-			affichage="%|0;%*%|1;%";
+			affichage="(%|0;%)*(%|1;%)";
 			evaluation = (fun v-> v.(0) *. v.(1) ) ;
 			derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))
 			} ;;
@@ -53,7 +55,7 @@ let rec evalue f v = match f with
 let rec affiche f = match f with
     |C(x) -> string_of_float x
     |V(i) -> "{x_{"^(string_of_int i)^"}}"
-    |F(g,va) -> evaluelatex (g.nbvar) (fun a -> List.rev (explode (affiche va.(a)))) (g.affichage);;
+    |F(g,va) -> evaluelatex (g.nbvar) (fun a ->(explode (affiche va.(a)))) (g.affichage);;
 
 let rec compose f garr = match f with
 	|C(x)->C(x)
@@ -90,3 +92,40 @@ affiche unefonctionsympas;;
 affiche (F(inverse, [|V 0|]));;
 
 affiche (derive 0 unefonctionsympas);;
+
+let unretourope lop lte c = let lc = Array.map lte c in F(lop,lc);;
+
+let lesgrospatterns = [
+        ("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));
+		("{%|0;%}",1,fun lte c -> lte c.(0));
+        ("ln(%|0;%)",1, unretourope ln);
+		("exp(%|0;%)",1,unretourope exponentielle);
+        ("%|0;%*%|1;%",2,unretourope fois);
+        ("%|0;%+%|1;%",2,unretourope plus);
+        ("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] ));
+        ("-%|0;%",1,unretourope oppose);
+		("x_%|0;%",1,fun lte c -> print_string (implode c.(0));(V (int_of_string (implode c.(0))) ) );
+        ("%|0;%",1,fun lte c -> (C (float_of_string (implode c.(0))) ) )
+    ];;
+
+ 
+
+let rec parselatex lelatex = 
+    print_string (implode lelatex);print_string " : : ";
+	print_newline ();
+    unvraiteretourne
+        (fun (expr_pat,n,unretour) ->
+            let a,x = (levaluation lelatex (expr_pat,n) ) in
+            if a then (a,(unretour (fun c -> let (d,e) = parselatex c in e) x)) else (false,C 0.)
+        )
+        lesgrospatterns
+        (C 0.);;
+
+let latex_en_expression x = snd (parselatex (explode x));;
+
+(* let lexp = snd (latex_to_exp lestring) ;; *)
+(* affiche lexp;; *)
+
+(* (levaluation (explode "x_0") ("x_%|0;%",1));; *)
+
+(* levaluation lestring ("frac{%|0;%}{%|1;%}",2);; *)

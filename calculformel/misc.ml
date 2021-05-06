@@ -20,4 +20,10 @@ let array_concat l =
 	done;
 	res;;
 
-array_concat [|[|1;2|];[|3;4;56|];[|6|];[||]|];;
+let ecritdansfichier fichier txts = 
+	let oc = open_out fichier in
+	List.map (
+		fun txt->
+			Printf.fprintf oc "%s\n" txt; 
+	) txts;
+	close_out oc;;
