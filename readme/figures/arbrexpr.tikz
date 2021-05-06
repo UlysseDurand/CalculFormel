@@ -1,0 +1,16 @@
+
+\begin{tikzpicture}[yscale=-0.5,xscale=0.5]
+\node [circle, draw=black] (A) at (0,0) {$\times$};
+\node [circle, draw=black] (B) at (-1,2) {+};
+\node [circle, draw=black] (C) at (-2,4) {$x$};
+\node [circle, draw=black] (D) at (0,4) {$3$};
+\node [circle, draw=black] (E) at (1,2) {$1/$};
+\node [circle, draw=black] (F) at (2,4) {$-$};
+\node [circle, draw=black] (G) at (2,6) {$y$};
+\draw[->] (A) to (B);
+\draw[->] (B) to (C);
+\draw[->] (B) to (D);
+\draw[->] (A) to (E);
+\draw[->] (E) to (F);
+\draw[->] (F) to (G);
+\end{tikzpicture}

@@ -48,7 +48,7 @@ let rec exponentielle = {nbvar = 1;
 let rec evalue f v = match f with
     |C(x) -> x
     |V(i) -> v.(i)
-    |F(g,fa) -> g.evaluation (Array.mapi (fun i unef-> evalue unef v) fa );;
+    |F(g,fa) -> g.evaluation (Array.map (fun unef-> evalue unef v) fa );;
 
 let rec affiche f = match f with
     |C(x) -> string_of_float x

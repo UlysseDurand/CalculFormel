@@ -1,0 +1,268 @@
+\documentclass{article}
+%\usepackage{tikz}
+\usepackage[margin=1in]{geometry} % full-width
+%\usepackage{graphicx}
+
+
+% AMS Packages
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+
+
+% Unicode
+\usepackage[utf8]{inputenc}
+
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\newtheorem{implementation}{Implementation Caml}[section]
+\newcommand*{\unefiguregraphic}[2]{\begin{figure}[!h] \centering \includegraphics{#1} \caption{#2} \end{figure}}
+\newcommand*{\unefiguregraphicsimple}[1]{\begin{figure}[!h] \centering \includegraphics{#1}\end{figure}}
+\newcommand*{\unefiguretikz}[2]{\begin{figure}[!h] \centering \input{figures/#1.tikz} \caption{#2} \end{figure}}
+\newcommand*{\unefiguretikzsimple}[1]{\begin{figure}[!h] \centering \input{figures/#1.tikz}\end{figure}}
+\usepackage{listings}
+\lstset{
+    language=caml,
+    basicstyle=\small,
+    breaklines=true
+}
+
+\title{Calcul formel}
+\author{DURAND Ulysse}
+\everymath{\displaystyle}
+\date{}
+\begin{document}
+
+\maketitle
+Les expressions ou morceaux de code Ocaml seront en gras, les chaines de caract\'ere seront soulign\'ees.\\\\
+Le but est de faire ce qui peut s'apparenter \`a un logiciel de calcul formel en caml, il doit pouvoir \'evaluer des fonctions, les d\'eriver, et pouvoir afficher leurs expressions en \LaTeX.\\
+Un objectif est aussi de pouvoir renseigner les expressions des fonctions \`a traiter en \LaTeX.
+On devrait \`a la fin avoir ce r\'esultat : 
+\\
+
+\begin{lstlisting}
+let fonctiona = "\frac{x+y}{ln(x-y)}";;
+let fonctionb = derive "x" fonctiona;;
+print_float (evalueb [|3. ; 1.|]);;print_new_line() ;
+print_string (affiche fonctionb);;print_new_line() ;
+(*DOIT AFFICHER*)
+-1.67935843
+\frac{1}{ln(x-y)}-\frac{x+y}{(x-y)(ln(x-y))^2}
+\end{lstlisting}
+
+\section {Repr\'esentation des fonctions}
+Nous traiterons d'expressions alg\'ebriques repr\'esent\'ees par des arbres d'expression.\\
+
+l'arbre suivant repr\'esente l'expression alg\'ebrique $\frac{x+3}{-y}$ : \\
+\unefiguretikz{arbrexpr}{Exemple d'arbre d'expression}
+\\
+On discernera deux types de feuilles : les variables et les constantes
+Et les noeuds sont de la forme (une operation, des fils)\\
+d'o\`u une telle impl\'ementation en Caml :
+
+\begin{lstlisting}
+type operation = {nbvar : int ;affichage : string ; evaluation : float array->float ; derive : deriv}
+and expression = 
+    C of float |
+    V of int |
+    F of operation * (expression array)
+and deriv = NonDeriv | Deriv of ((expression array)->(expression -> expression) -> expression);;
+\end{lstlisting}
+
+Les variables sont caract\'eris\'ees par un entier ($x_i, i\in\mathbb{N}$),\\ nous allons
+d\'etailler les caract\'eristiques \textbf{affichage}, \textbf{evaluation} et \textbf{derive} des op\'erations et le type \textbf{deriv}.\\
+\section{affichage}
+Construisons une fonction \textbf{affiche}: \textbf{expression -> string}, telle que si a est l'arbre d'expression Figure1, alors \textbf{affiche a} retourne \verb|\frac{x+3}{-y}|\\
+Pour expliciter comment afficher une expression, nous allons, \`a chaque op\'eration, associer un code dans un langage invent\'e (nous allons l'appeler langage d'affichage d'expression), ce code \'etant sous forme d'une cha\^ine de caract\`eres, il d\'ecrit la forme de l'affichage d'une op\'eration.
+
+\subsection{le langage d'affichage d'expression}
+Pour comprendre la construction de ce langage invent\'e, voici des exemples.
+Avec l'op\'eration plus, on veut que \textbf{affichage (F(plus,[|a ; b|])) = (affichage a)\^{}"+"\^{}(affichage b)}.\\ 
+Alors voici le contenu de plus.affichage : \underline{\%|0;\%+\%|1;\%}, on dit alors de retourner (affichage du fils 0) + (affichage du fils 1).\\
+
+Pour l'op\'eration det, on veut que \textbf{affichage (F(det,[|x0,x1,x2|])) = "det("\^{}(affichage x0)\^{}","\^{}(affichage x1)\^{}","\^{}(affichage x2)\^{}")"}.\\
+Alors voici, avec \textbf{det.nbvar=3}, le contenu de det.affichage : \underline{det(\%,|a;\%)} (\underline{,} le d\'elilmiteur, et \underline{a} comme all pour all variables)\\
+
+On peut imaginer une op\'erations qui doit s'afficher ainsi : \underline{ope(x3;x4;x5;...;x10)} alors on aura \textbf{ope.affichage = "ope\%;|3-11;\%"}\\
+ou bien on peut imaginer l'op\'eration s'affichant ainsi : \underline{ope(x0;x1;...;x9 / x15,x16,x17,x20,x21,...,x(n-1))} o\`u n est ope.nbvar, alors voici le contenu de ope.affichage : \underline{ope(\%;|-10;\% / \%,|15-18;20-;\%)}
+
+\subsection{Compilation de ce langage}
+Comment faire comprend \`a Caml ce langage ?\\
+Nous allons utiliser un type d'automate particulier qui nous permettra de reconnaitre un tel langage, 
+c'est ce qui sera appel\'e ici un automate deterministe qui \'ecrit avec m\'emoire. Il \'ecrit, 
+c'est \`a dire qu'il reconna\^it des mots mais renvoit aussi une chaine de caract\'eres. 
+On peut donc associer \`a un tel automate une fonction (ce sera $\eta^\star(i,mem_i,\cdot)$, explications dans la section 3)\\
+
+Cet automate particulier sera associ\'e \`a une fonction \textbf{evaluelatex} prenant en param\'etres le nombre de variables de l'op\'eration, une fonction rendv qui elle prend un entier i en entr\'ee et qui lui associe le rendu de la variable i, et une cha\^ine de caract\`eres : notre code dans notre langage pour notre expression. \textbf{evaluelatex} retournera l'affichage voulu pour notre op\'eration. 
+Voici le typage de \textbf{evaluelatex} : \textbf{int -> (int->char list) -> char list -> char list}\\ 
+Par exemple, \textbf{evaluelatex ope.nbvar rendv "ope(\%;|-3\%)" = "ope("\^{}(rendv 0)\^{}"(rendv 1)"\^{}(rendv 2)\^{}")"} (nous confondrons ici string et char list par souci de simplicit\'ee.)\\
+Les d\'etails de l'automate et de sa fonction, \textbf{evaluelatex}, associ\'ee, seront explicit\'es dans la section 3.
+
+\section{De quoi faire la fonction \textbf{evaluelatex}}
+\subsection{Automates utiles}
+En caml, voilà une manière d'implémenter les automates : 
+
+\begin{lstlisting}
+type ('q, 'sig) automate = ('q -> bool)*('q -> bool)*(q'*sig'*('q list));;
+(*('q,'ssig) automate = (i,f,delta) correspond a un automate ('q,'sig,i,f,delta)*)
+\end{lstlisting}
+
+
+
+\subsubsection{Automate déterministe qui écrit}
+\begin{definition}[Automate déterministe qui écrit]
+Ce type d'automate permet de transformer un mot en un autre.\\
+\begin{gather*}
+    \mathcal{A} = (Q,\Sigma_1 ,\Sigma_2, i, F, \delta, \eta) \\
+    i\in Q,F \in \mathcal{P} (Q)
+\end{gather*}
+\begin{align*} 
+    \delta : Q\times \Sigma_1 &\rightarrow Q \\
+    \eta : Q\times \Sigma_1 &\rightarrow (\Sigma_2 )^\star\\
+    \\             
+    \delta^\star : Q\times \Sigma_1 ^\star &\rightarrow Q \\
+    (q,\epsilon) &\mapsto q\\
+    (q,l.m) &\mapsto \delta^\star(\delta(q,l),m)\text{, avec }l\in \Sigma_1\\
+    \\
+    \eta^\star : Q\times \Sigma_1 ^\star &\rightarrow (\Sigma_2)^\star \\
+    (q,\epsilon) &\mapsto \epsilon '\\
+    (q,l.m) &\mapsto \eta(q,l).\eta^\star(\delta(q,l),m)\text{, avec }l\in \Sigma_1\\
+\end{align*}
+
+\end{definition}
+Implementation en Caml : 
+\begin{lstlisting}
+type ('q, 'sig1, 'sig2) automatequiecrit = ('q*('sig2 list), 'sig1 ) automate;;
+\end{lstlisting}
+\textbf{('q,'sig1,'sig2) automatequiecrit = (i,f,g)} correspond \`a un automate $('q,'sig1,'sig2,i,f,delta,eta)$. Supposons $g$ sous la forme $g((q,m),l) = (q',p::m)$, alors $delta(q,l) = q'$ et $eta(q,l) = p$
+\newpage
+\subsubsection{Automate qui écrit avec une mémoire}
+
+textvf
+
+\begin{definition}[Automate qui écrit avec mémoire]
+Ce type d'automate n'a pas de d'intérêt théorique vu que la mémoire est finie, mais a un intérêt pratique.
+
+\begin{gather*}
+    \mathcal{A} = (Q,\Sigma_1,\Sigma_2, S_m, i, mem_i, F, \delta, \eta) \\
+    Q,\Sigma_1,\Sigma_2,i,F \text{ restent inchangés}\\
+    mem_i \text{est la m\'emoire initiale}
+\end{gather*}
+\begin{align*}
+    \delta : Q\times S_m \times \Sigma_1 &\rightarrow Q \times S_m \\
+    \eta : Q\times S_m \times \Sigma_1&\rightarrow (\Sigma_2 )^\star\\
+    \\             
+    \delta^\star : Q\times S_m \times \Sigma_1^\star &\rightarrow Q \\
+    (q,M,\epsilon) &\mapsto q\\
+    (q,M,l.m) &\mapsto \delta^\star(\delta(q,M,l),m)\text{, avec }l\in \Sigma\\
+    \eta^\star : Q\times S_m\times \Sigma_1^\star &\rightarrow (\Sigma_2)^\star \\
+    (q,M,\epsilon) &\mapsto \epsilon '\\
+    (q,M,l.m) &\mapsto \eta(q,M,l).\eta^\star(\delta(q,M,l),m) \text{, avec }l \in \Sigma_1\\
+\end{align*}
+\end{definition}
+
+Il s'agit en fait d'un automate qui écrit avec $Q' = Q \times S_m$\\
+Implementation en Ocaml : \\
+
+\begin{lstlisting}    
+type ('q, 'sm, 'sig1, 'sig2) automatequiecritavecmemoire = ('q*'sm,'sig1,'sig2) automatequiecrit
+\end{lstlisting}
+
+\textbf{('q,'sm,'sig1,sig2) automatequiecritavecmemoire : (i,f,g)} correspond \`a un automate
+qui ecrit avec m\'emoire $('q,sig1,sig2,sm,i,f,delta,eta)$.
+Supposons $g$ sous la forme $g((q,m,mem),l) = ((q',mem'),p@m)$,
+alors $delta((q,mem),l) = (q',mem')$ et $eta((q',mem'),l) = p$\\\\
+Pour les représenter graphiquement, nous ferons comme les automates, mais avec des annotation sur les arêtes différentes :\\
+
+\unefiguretikzsimple{lareprstand}
+
+\subsection{Et dans notre cas}
+Voici l'automate associ\'e \`a la fonction \textbf{evaluelatex n renv s} (correspond \`a $\delta^\star(i,mem_i,s)$ pour l'automate suivant):\\
+avec $n$ un entier et $N = \{"0","1","2","3","4","5","6","7","8","9"\}$\\
+
+\unefiguretikz{lautomate}{Automate de \textbf{evaluelatex}}
+
+Si A est cet automate qui écrit, \textbf{n = 6}, \textbf{rendv a} retourne \underline{x\_}a\\
+fung d\'efini ainsi en Caml : 
+\begin{lstlisting}
+let rec fung (s,a,b) = 
+    if a > b then [] else
+    if a = b then rendv a 
+    else (rendv a)@s@(fung (s,a+1,b)) in    
+\end{lstlisting}
+Par exemple, \textbf{fung (s,0,3) = (rendv  0)\^{}s\^{}(rendv 1)\^{}s\^{}(rendv 2)\^{}s\^{}(rendv 3)}\\\\
+$\eta^\star (0,(\text{''},0,0),$ 
+\verb|\frac{{%|\textbar\verb|0;%+%|\textbar\verb|15;%}^{(%*|\textbar\verb|1-4;%)}}{%+|\textbar\verb|a;%}| ) =\\
+\verb|\frac{{x_0+x_15}^{x_1*x_2*x_3}}{x_0+x_1+x_2+x_3+x_4+x_5}|\\
+
+Voila finalement la fonction \textbf{affiche}que l'on voulait, en Caml :
+\begin{lstlisting}
+let rec affiche f = match f with
+    |C(x) -> string_of_float x
+    |V(i) -> "{x_{"^(string_of_int i)^"}}"
+    |F(g,va) -> evaluelatex (g.nbvar) (fun a -> List.rev (explode (affiche va.(a)))) (g.affichage);;
+\end{lstlisting}
+
+\section{Evaluation}
+Construisions une fonction evalue qui prend en entr\'ee une expression et un point en lequel l'\'evaluer : \textbf{expression -> float array -> float}, telle que si a est l'arbre d'expression Figure1, v le point en lequel \'evaluer a, alors \textbf{evalue a [|2.;3.|]} retourne \textbf{-1.6666}\\
+L'\'evaluation est alors plut\^ot simple, se faisant par induction.\\
+Pour une constante, on retourne la constante,\\
+pour la variable $x_i$ on retourne \textbf{v.(i)},\\
+et pour une op\'eration sur plusieurs expressions, on retourne la fonction d'\'evaluation de l'op\'eration appliqu\'ee \`a l'\'evaluation de chaque fils.\\
+
+d'o\`u une telle impl\'ementation en Caml : 
+\begin{lstlisting}
+let rec evalue f v = match f with
+    |C(x) -> x
+    |V(i) -> v.(i)
+    |F(g,fa) -> g.evaluation (Array.map (fun unef -> evalue unef v) fa );;
+\end{lstlisting}
+
+\section{D\'erivation}
+Pour renseigner pour une op\'eration si elle est d\'erivable et comment \'evaluer sa d\'eriv\'ee, nous allons utiliser le type d\'erivation d\'efini en premi\`ere page : soit l'op\'eration n'est pas d\'erivable, soit elle l'est et alors on donne une expression de sa d\'eriv\'ee.\\
+Pour l'expression de sa d\'eriv\'ee nous aurons besoin d'utiliser la fonction \textbf{derive} \`a l'int\'erieur, qui sera alors renseign\'ee dans Deriv (c'est le \textbf{expression -> expression}). Le \textbf{expression array} correspond aux fils de la fonction qui auront leur r\^ole dans l'expression de la d\'eriv\'ee.\\
+Alors on a \textbf{Derive} prenant en param\`etres \textbf{ar} et \textbf{d}, \textbf{ar} \'etant les fils de l'op\'eration et \textbf{d} \'etant la fonction d\'eriv\'ee.\\\\
+
+Un exemple sur l'op\'eration plus,\\
+\textbf{plus.derive = Deriv(fun ar d -> F(plus,[|d ar.(0);d ar.(1)|]) )}, on retrouve $(u+v)'=u'+v'$\\
+Un deuxi\`eme exemple, sur l'op\'eration de multiplication,
+\\ \textbf{fois.derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))}, on retrouve $(u*v)' = u'*v + u*v'$\\\\
+
+Pour ce qui est de la fonction \textbf{derive}, il y a plusieurs fonctions de d\'erivation que l'on pourra renseigner dans le type Derive de notre op\'eration, ce sont les d\'eriv\'ees par rapport aux diff\'erentes variables. \\C'est pourquoi nous allons prendre en arguments un entier \textbf{k} et une expression \textbf{f} pour retourner l'expression de la d\'eriv\'ee selon la k-i\`eme variable de \textbf{f}.\\
+Si \textbf{f} est la variable $x_i$, alors on retourne $\delta_{k,i}$.\\
+Si \textbf{f} est une constante, alors on retourne le flottant \textbf{0}.\\
+Si \textbf{f} est une op\'eration \textbf{g} dont les fils sont \textbf{va} et que \textbf{g.derive} est \textbf{NonDeriv}, on renvoit une erreur mais si c'est \textbf{Deriv(laf)} alors tout est renseign\'e dans \textbf{laf}, il n'y a qu'a retourner \textbf{laf va (derive k)}\\
+Voici l'expression de \textbf{derive} en Caml : \\
+\begin{lstlisting}
+let rec derive k f = match f with
+	|C(x)->C(0.);
+	|V(i)-> if i=k then C(1.) else C(0.);
+	|F(g,va) -> match g.derive with 
+		|NonDeriv->failwith "Fonction non derivable !";
+		|Deriv(laf)->laf va (derive k);;
+\end{lstlisting}
+
+\section{Parser}
+Le plus dur reste \`a faire : transformer une expression \textbf{entree} sous forme \LaTeX en une expression sous forme d'un arbre d'expression. L'id\'ee est de faire du pattern matching, mais sur une cha\^ine de caract\`eres.
+En effet, on voudrait une application recursive \textbf{parselatex} telle que par exemple\\
+\textbf{parselatex x+y} retourne \textbf{F(plus,[|parselatex } x \textbf{ ; parselatex} y \textbf{|] )}\\
+On reconnait un pattern matching.\\
+Pour se faire, pourquoi ne pas r\'eutiliser notre langage d\'efini section 2.1, on aurait alors un pattern \underline{\%|0;\%+\%|1;\%}.\\\\
+L'id\'ee est la suivante : pour chaque pattern \textbf{p}, utiliser une fonction associ\'ee \`a un automate que nous expliciterons plus loin \textbf{automate\_de\_pattern p} qui retournerait un automate qui \'ecrit reconnaissant \textbf{entree} et ressortant les chaines de caract\`eres \`a la place des $x_i$ habituels.\\\\ 
+Pour le pattern du plus et pour \underline{banane+pomme} comme valueur pour \textbf{entree}, l'automate du pattern de plus reconnaitrait \textbf{entree} et ressortirait un tableau \textbf{[|"banane","pomme"|]} auquel il ne resterait qu'\`a associer \textbf{F(plus,[|parselatex "banane" ; parselatex "pomme"|])}\\
+La difficult\'ee r\'eside en la construction d'un tel automate.\\
+Un d\'etail : plusieurs pattern pourraient \^etre reconnus, alors on utilisera seulement la sortie de l'automate du premier de ces pattern dans notre liste de pattern. Ils seront ainsi prioris\'es.\\\\
+
+La tache sera d\'ecoup\'ee en deux \'etapes, il faut construire l'automate \`a partir d'un pattern dans notre langage, puis appliquer cette construction \`a du latex comme d\'ecrit pr\'ecedement.
+Construisons alors les fonctions \textbf{automate\_de\_pattern} et \textbf{parselatex}.
+
+\subsection{\textbf{automate\_de\_pattern}}
+Comme dit pr\'ecedemment, \textbf{automate\_de\_pattern} sera la fonction associ\'ee \`a un automate qui ecrit ressortant l'automate voulu.\\
+Ce sera un automate qui \'ecrit mais avec $\Sigma'$ \'etant l'enemble des automates d\'eterministes, la concat\'enation sur cet alphabet \'etant un op\'erateur \textbf{concat\_automate} que nous d\'efinirons bient\^ot.\\
+\listoffigures
+\end{document}

@@ -1,5 +1,5 @@
-#use "misc.ml";;
+(*#use "misc.ml";;
 #use "automate.ml";;
-#use "analyse.ml";;
-#use "groupe.ml";;
-#use "main.ml";;
+#use "analyse.ml";;*)
+#use "automate3.ml";;
+#use "testons.ml";;

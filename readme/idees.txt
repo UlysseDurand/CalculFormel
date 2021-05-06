@@ -1,0 +1,9 @@
+*Espace d'ecriture :
+C'est un ensemble muni d'une loi de composition interne appel\'ee concatenation, et d'un element neurte appel\'e vide.
+
+
+
+*Automate priorisant :
+C'est un automate d\'eterministe muni d'un ordre partiel sur les transitions tel que celles d'un
+m\^eme couple (q,l) soient comparables.
+Aussi, il n'a qu'un \'etat initial.

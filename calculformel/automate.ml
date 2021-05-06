@@ -6,7 +6,6 @@ let decomp comp = (fun x->let a,b = comp x in a),(fun x->let a,b = comp x in b);
 
 let compo f g = fun x->(f x, g x);;
 
-
 type 'q automate = Aut of 'q*('q -> bool)*( ('q->char)->'q);; (*Ici, Q = 'q et \Sigma = char, on a Aut(I,F,\delta)*)
 
 type 'q automatequiecrit = AutQe of 'q*('q -> bool)*(('q*char)->'q*char list) ;; (*Ici, Q = `q, \Sigma = \Sigma ' = char , on a AutQe(I,F,(\delta,\eta))*)
@@ -47,11 +46,11 @@ type etat = int*memoire;;
 
 
 
-let lafonct n funv ((q,mem),l) = 
+let lafonct n rendv ((q,mem),l) = 
     let rec fung (s,a,b) = 
         if a > b then [] else
-        if a = b then funv a 
-        else (funv a)@s@(fung (s,a+1,b)) in    
+        if a = b then rendv a 
+        else (rendv a)@s@(fung (s,a+1,b)) in    
     let (pe,s,a,b) = mem in 
     let erreur () = failwith ("ERREUR a la position "^(string_of_int pe)^", etat "^(string_of_int q)^", lettre "^(Char.escaped l)) in
     match q with
@@ -60,7 +59,7 @@ let lafonct n funv ((q,mem),l) =
         |1 -> if l='%' then (0,incr mem),[] else 
                 if l='|' then (2,incr mem),[] 
                 else (1,(pe+1,s@[l],a,b)),[]
-        |2 -> if l=';' then (2,(pe+1,s,0,0)),(funv a) else 
+        |2 -> if l=';' then (2,(pe+1,s,0,0)),(rendv a) else 
                 let lc = (chiffre l) in if lc>=0 then (2,(pe+1,s,10*a+lc,b)),[] else
                 if l='a' then (3,(pe+1,s,0,n)),[] else 
                 if l='-' then (3,incr mem),[] else
@@ -71,16 +70,20 @@ let lafonct n funv ((q,mem),l) =
                 erreur ()
         |_ -> failwith "ETAT NON ATTEIGNABLE";;
 
-let rec lefunv a = ['x';'_']@['{']@(List.rev (explode (string_of_int a ) ))@['}'];;
+let rec lerendv a = ['x';'_']@['{']@(List.rev (explode (string_of_int a ) ))@['}'];;
 
-let automatelatex n funv = AutQe( (0,(0,[],0,0)) , (fun (q,mem) -> q=0) ,(lafonct n funv));;
+let automatelatex n rendv = AutQe( (0,(0,[],0,0)) , (fun (q,mem) -> q=0) ,(lafonct n rendv));;
 
-let evaluelatex n funv txt = implode (List.rev (executautomate (automatelatex n funv) (List.rev(explode txt))));;
+let evaluelatex n rendv txt = implode (List.rev (executautomate (automatelatex n rendv) (List.rev(explode txt))));;
 
 
 
 print_newline ();;
 let letext = "\\frac{{%|0;%+%|15;%}^{(%*|1-4;%)}}{%+|a;%}";;print_string letext;print_newline ();;
 print_newline ();;
-print_string (evaluelatex 6 lefunv letext);;
+print_string (evaluelatex 6 lerendv letext);;
 print_newline ();;
+
+
+
+(*ON SE LANCE DANS LE PARSER*)

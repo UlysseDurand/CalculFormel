@@ -17,8 +17,7 @@
 	\draw [->, in=45, out=135, loop] (0) to node [ above, scale=\sc] {$\begin{pmatrix} M \\ l \end{pmatrix} \mapsto \begin{pmatrix} M \\ l \end{pmatrix} $} ();
 	\draw [->, bend left=15, looseness=0.75] (3) to node [ below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \text{';'} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,0) \\ \text{fung } (s,a,b) \end{pmatrix} $} (2);
 	\draw [->, bend right=150, looseness=2.50] (2) to node [ below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \text{'a'} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,n-1) \\ \epsilon \end{pmatrix} $} (3);
-	\draw [->, in=-90, out=-45, loop] (2) to node [below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \text{';'} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,0) \\ \text{funv } a \end{pmatrix} $} ();
+	\draw [->, in=-90, out=-45, loop] (2) to node [below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \text{';'} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,0) \\ \text{rendv } a \end{pmatrix} $} ();
 	\draw [->] (4.center) to node[above,scale=\sc] {(\text{''},0,0)} (0);
 	\draw [->] (0) to (5.center);
 \end{tikzpicture}   
-

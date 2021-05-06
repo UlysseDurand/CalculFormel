@@ -1,0 +1,5 @@
+\begin{tikzpicture}
+	\node[shape=circle,draw=black] (0) at (0,0) {a};
+	\node[shape=circle,draw=black,scale = 0.5] (1) at (4,0) {$(\delta((a,mem),l))_0$};
+	\draw [->,bend left=15] (0) to node[above, scale=0.5] {$\begin{pmatrix} mem \\ l \end{pmatrix} \mapsto \begin{pmatrix} (\delta((a,mem),l))_1 \\ \eta((a,mem),l) \end{pmatrix} $} (1);
+\end{tikzpicture}
