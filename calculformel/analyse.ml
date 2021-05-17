@@ -10,41 +10,10 @@ and expression =
     F of operation * (expression array)
 and deriv = NonDeriv | Deriv of ((expression array)->(expression -> expression) -> expression);;
 
-let rec plus = {nbvar=2;
-			affichage="%|0;%+%|1;%" ; 
-			evaluation = (fun v->v.(0) +. v.(1) ) ; 
-			derive = Deriv(fun ar d -> F(plus,[|d ar.(0);d ar.(1)|]) )
-			} ;;
 
-let rec oppose = {nbvar=1;
-			affichage="-%|0;%";
-			evaluation = (fun v-> 0.-.v.(0)) ;
-			derive = Deriv(fun ar d -> F(oppose, [|d ar.(0)|]))
-			} ;;
 
-let rec fois = {nbvar=2;
-			affichage="(%|0;%)*(%|1;%)";
-			evaluation = (fun v-> v.(0) *. v.(1) ) ;
-			derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))
-			} ;;
 
-let rec inverse = {nbvar=1;
-			affichage="frac{1}{%|0;%}";
-			evaluation = (fun v-> 1./.v.(0));
-			derive = Deriv(fun ar d -> F(oppose,[|F(fois,[|d ar.(0) ; F(inverse,[|F(fois,[|ar.(0);ar.(0)|])|])|])|] ) )
-			};;
 
-let rec ln = {nbvar=1;
-			affichage="ln(%|0;%)";
-			evaluation= (fun v -> log v.(0));
-			derive = Deriv(fun ar d -> F(fois, [|d ar.(0) ; F(inverse,[|ar.(0)|])|]))
-			};;
-
-let rec exponentielle = {nbvar = 1;
-			affichage="exp(%|0;%)";
-			evaluation = (fun v-> exp v.(0));
-			derive = Deriv(fun ar d -> F(fois, [|d ar.(0);F(exponentielle,[|ar.(0)|])|] ))
-			};;
 
 
 let rec evalue f v = match f with
@@ -70,14 +39,84 @@ let rec derive k f = match f with
 		|NonDeriv->failwith "Fonction non derivable !";
 		|Deriv(laf)->laf va (derive k);;
 
+
+
+
+
+
+let rec plus = {
+        nbvar=2;
+		affichage="%|0;%+%|1;%" ; 
+		evaluation = (fun v->v.(0) +. v.(1) ) ; 
+		derive = Deriv(fun ar d -> F(plus,[|d ar.(0);d ar.(1)|]) )
+	} ;;
+
+let rec oppose = {
+        nbvar=1;
+		affichage="-%|0;%";
+		evaluation = (fun v-> 0.-.v.(0)) ;
+    	derive = Deriv(fun ar d -> F(oppose, [|d ar.(0)|]))
+	} ;;
+
+let rec moins = 
+    let vraiefonction = F(plus,[|V 0 ; F(oppose, [| V(1) |] ) |] ) in   
+    {
+        nbvar=2;
+        affichage="%|0;%-%|1;%";
+        evaluation= evalue vraiefonction;
+        derive = Deriv(fun ar d -> d (compose vraiefonction ar) )
+    };;
+
+let rec fois = {
+        nbvar=2;
+	    affichage="(%|0;%)*(%|1;%)";
+	    evaluation = (fun v-> v.(0) *. v.(1) ) ;
+    	derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))
+	} ;;
+
+let rec inverse = {
+        nbvar=1;
+        affichage="frac{1}{%|0;%}";
+        evaluation = (fun v-> 1./.v.(0));
+        derive = Deriv(fun ar d -> F(oppose,[|F(fois,[|d ar.(0) ; F(inverse,[|F(fois,[|ar.(0);ar.(0)|])|])|])|] ) )
+	};;
+
+let rec divise = 
+    let vraiefonction = (F(fois, [| F(inverse, [|V 0|]) ; V 1 |] )) in    
+    {
+        nbvar=2;
+        affichage="frac{%|0;%}{%|1;%}";
+        evaluation = evalue vraiefonction;
+        derive = Deriv(fun ar d -> d (compose vraiefonction ar) )
+    }
+
+let rec ln = {
+        nbvar=1;
+    	affichage="ln(%|0;%)";
+		evaluation= (fun v -> log v.(0));
+		derive = Deriv(fun ar d -> F(fois, [|d ar.(0) ; F(inverse,[|ar.(0)|])|]))
+	};;
+
+let rec exponentielle = {
+        nbvar = 1;
+		affichage="exp(%|0;%)";
+		evaluation = (fun v-> exp v.(0));
+		derive = Deriv(fun ar d -> F(fois, [|d ar.(0);F(exponentielle,[|ar.(0)|])|] ))
+	};;
+
 let exponentielle_base = 
-			let vraiefonction = (F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ) in
-			{
-			nbvar=2;
-			affichage="%|0;%^%|1;%" ; 
-			evaluation= evalue vraiefonction;
-			derive = Deriv(fun ar d -> d (compose vraiefonction [|ar.(0);ar.(1)|]) )
-			} ;;
+	let vraiefonction = (F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ) in
+	{
+		nbvar=2;
+		affichage="%|0;%^%|1;%" ; 
+		evaluation= evalue vraiefonction;
+		derive = Deriv(fun ar d -> d (compose vraiefonction ar) )
+	} ;;
+
+
+
+
+
 
 (* (x,y) |-> x^y+y^x *)
 let unefonctionsympas = F(plus,[|
@@ -96,14 +135,17 @@ affiche (derive 0 unefonctionsympas);;
 let unretourope lop lte c = let lc = Array.map lte c in F(lop,lc);;
 
 let lesgrospatterns = [
-        ("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));
+        ("frac{%|0;%}{%|1;%}",2,unretourope divise);
+        (*("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));*)
 		("{%|0;%}",1,fun lte c -> lte c.(0));
         ("ln(%|0;%)",1, unretourope ln);
 		("exp(%|0;%)",1,unretourope exponentielle);
         ("%|0;%*%|1;%",2,unretourope fois);
         ("%|0;%+%|1;%",2,unretourope plus);
+        ("%|0;%-%|1;%",2,unretourope moins);
         ("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] ));
         ("-%|0;%",1,unretourope oppose);
+        ("%|0;%^%|1;%",2, unretourope exponentielle_base);
 		("x_%|0;%",1,fun lte c -> print_string (implode c.(0));(V (int_of_string (implode c.(0))) ) );
         ("%|0;%",1,fun lte c -> (C (float_of_string (implode c.(0))) ) )
     ];;
@@ -122,6 +164,102 @@ let rec parselatex lelatex =
         (C 0.);;
 
 let latex_en_expression x = snd (parselatex (explode x));;
+
+(* let rec arbre_pattern_match expr pattern n = *)
+    (* let casbase () = Array.make n (C 0.) in *)
+    (* match pattern with *)
+        (* |C(x) -> (match expr with *)
+            (* |C(y) -> (x=y,casbase ()) *)
+            (* |_ -> (false, casbase ())) *)
+        (* |V(i) -> (true, let res=(casbase ()) in res.(i) <- expr ; res) *)
+        (* |F(ope,ar) -> match expr with *)
+            (* |C(y) -> (false, casbase ()) *)
+            (* |V(j) -> (false, casbase ()) *)
+            (* |F(oppe,arr)-> *)
+                (* toutvraiteretourneparindice *)
+                    (* ( *)
+                    (* fun k ->  *)
+                        (* let (a,b) =  arbre_pattern_match arr.(k) arr.(k) n in *)
+                        (* ( ((ope.affichage=oppe.affichage) && a),b) *)
+                    (* ) *)
+                    (* n *)
+                    (* (fun a b -> let res = casbase () in for i=0 to n-1 do if a.(i) = (C 0.) then (res.(i)<-b.(i)) else (res.(i)<-a.(i)) done;res) *)
+                    (* (casbase ()) *)
+					(* (Array.iter (fun x -> print_string (affiche x);print_string "  ";)) *)
+    (* ;; *)
+
+let rec arbre_pattern_match expr pattern n =
+    let casbase () = Array.make n (C 0.) in
+    match pattern with
+        |C(x) -> (match expr with
+            |C(y) -> (x=y,casbase ())
+            |_ -> (false, casbase ()))
+        |V(i) -> (true, let res=(casbase ()) in res.(i) <- expr ; res)
+        |F(ope,ar) -> match expr with
+            |C(y) -> (false, casbase ())
+            |V(j) -> (false, casbase ())
+            |F(oppe,arr)->
+				if not ( (Array.length arr) = (Array.length ar) && ope.affichage=oppe.affichage) then (false, casbase ()) else
+                let opeconc = (fun a b -> let res = casbase () in for i=0 to n-1 do if a.(i) = (C 0.) then (res.(i)<-b.(i)) else (res.(i)<-a.(i)) done;res) in
+                let res = ref (true,Array.make n (C 0.)) in
+                    for k=0 to (Array.length arr)-1 do
+						let (a,b) = arbre_pattern_match arr.(k) ar.(k) n in
+						(* print_string "aHA ";print_bool a; *)
+						res:=(let c,d = !res in (a&&c,opeconc b d));
+                    done;!res
+	;;
+
+let listesimplifications = [
+        (F(oppose,[| C 0.|]), 0, fun sim c -> C 0.);
+		(F(fois,[| V 0 ; F(oppose,[|V 1|]) |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
+		(F(fois,[| F(oppose,[|V 1|]) ; V 0 |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
+        (F(fois,[| C 0. ; V 0 |]),1,fun sim c -> C 0.);
+        (F(fois,[| V 0 ; C 0. |]),1,fun sim c -> C 0.);
+        (F(fois,[| C 1. ; V 0 |]),1,fun sim c -> (sim c.(0)) );
+        (F(fois,[| V 0 ; C 1. |]),1,fun sim c -> (sim c.(0)) );
+        (F(plus,[| V 0 ; C 0. |]),1,fun sim c -> (sim c.(0)) );
+        (F(plus,[| C 0. ; V 0 |]),1,fun sim c -> (sim c.(0)) );
+		(F(moins,[| V 0 ; C 0. |]),1,fun sim c -> (sim c.(0)));
+		(F(moins,[| C 0. ; V 0 |]),1,fun sim c -> F(oppose,[|sim c.(0)|]));
+        (F(plus,[| V 0 ; F(oppose,[| V 1 |]) |]),2,fun sim c -> F(moins, Array.map sim c) );
+		(F(divise, [| V 0 ; F(divise, [|V 1; V 2 |] ) |]),3,fun sim c -> F(divise,[| F(fois,[|sim c.(0) ; sim c.(2)|]) ; sim c.(1)|]) );
+		(F(divise, [|F(divise, [|V 0 ; V 1 |] ) ; V 2 |]),3,fun sim c -> F(divise,[| sim c.(0) ; F(fois,[|sim c.(1) ; sim c.(2)|]) |]) );
+		(F(divise, [| F(inverse , [|V 0 |]) ; V 1 |]),2,fun sim c -> F(inverse,[|F(fois,Array.map sim c)|]));
+		(F(divise, [| V 0 ; F(inverse , [|V 1|]) |]),2,fun sim c -> F(fois,Array.map sim c));
+		(F(divise,[|C 1. ; V 0|]),1,fun sim c -> F(inverse, [|sim c.(0)|]) );
+        (F(fois,[| V 0 ; F(inverse, [|V 1|] ) |]), 2, fun sim c -> F(divise, Array.map sim c) );
+        (F(fois,[| F(inverse, [|V 1|] ) ; V 0 |]), 2, fun sim c -> F(divise, Array.map sim c) );
+        ((F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ),2, fun sim c -> F(exponentielle_base,Array.map sim c))
+    ];;
+
+(* let rec simplifie expr = *)
+    (* (* print_string (affiche expr);print_string " : : "; *) *)
+	(* (* print_newline (); *) *)
+    (* unvraiteretourne *)
+        (* (fun (arbre_pat,n,unretour) -> *)
+            (* let a,x = (arbre_pattern_match expr arbre_pat n ) in *)
+            (* if a then (a,(unretour (fun c -> let (d,e) = simplifiebis c in e) x)) else (false,expr)  *)
+        (* ) *)
+        (* listesimplifications *)
+        (* expr *)
+(* and simplifiebis expr = match expr with *)
+	(* |F(ope,arr) -> (simplifie (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr))) *)
+	(* |_ -> (simplifie expr);; *)
+	
+let rec simplifie expr =
+    (* print_string (affiche expr);print_string " : : "; *)
+	(* print_newline (); *)
+    unvraiteretourne
+        (fun (arbre_pat,n,unretour) ->
+            let a,x = (arbre_pattern_match expr arbre_pat n ) in
+            if a then (a,(unretour (fun c -> let (d,e) = simplifiebis c in e) x)) else (false,expr) 
+        )
+        listesimplifications
+        expr
+and simplifiebis expr = 
+	let (a,b) = simplifie expr in if a then simplifiebis b else match expr with
+	|F(ope,arr) -> (simplifie (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr)))
+	|_ -> (false,expr);;
 
 (* let lexp = snd (latex_to_exp lestring) ;; *)
 (* affiche lexp;; *)

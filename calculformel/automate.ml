@@ -1,7 +1,6 @@
 let explode s = let res = ref [] in for i=0 to (String.length s)-1 do res:=((String.get s i)::(!res)); done;!res;;
 let rec implode cl = match cl with |[]->"" |x::xs -> (implode xs)^(Char.escaped x);;
 
-
 let decomp comp = (fun x->let a,b = comp x in a),(fun x->let a,b = comp x in b);;
 
 let compo f g = fun x->(f x, g x);;

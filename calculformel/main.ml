@@ -3,9 +3,10 @@ open Groupe;;
 open Analyse;;
 open Analyse3;;*)
 
-let exprlatexa = "frac{x_0+x_1}{ln(x_0-x_1)}";;
-let expra = latex_en_expression exprlatexa;;
-let exprb = derive 0 expra;;
-let exprlatexb = affiche exprb;;
+let exprlatexa = "x_0^{x_1}+x_1^{x_0}";;
+let expra = latex_en_expression exprlatexa;; (*parse le latex*)
+let exprb = (derive 0 expra);; 				 (*derive l'expression par rapport à x_0*)
+let exprbsimpl = snd (simplifiebis exprb);;	 (*simplifie l'expression obtenue*)
+let exprlatexb = affiche exprbsimpl;;		 (*transforme l'expression en latex*)
 
-ecritdansfichier "res.txt" [exprlatexa^"\\\\" ; exprlatexb];;
+ecritdansfichier "res.txt" [exprlatexa ; "\\\\" ; exprlatexb];;

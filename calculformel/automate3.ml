@@ -1,21 +1,7 @@
 (*########## DES PETITES FONCTIONS BIEN UTILES ##########*)
-let fst (x,y) = x;;
-let snd (x,y) = y;;
-
 let explode s = let res = ref [] in for i=0 to (String.length s)-1 do res:=((String.get s i)::(!res)); done;List.rev !res;;
 let rec implode cl = match cl with |[]->"" |x::xs -> (Char.escaped x)^(implode xs);;
 
-let decomp comp = (fun x->let a,b = comp x in a),(fun x->let a,b = comp x in b);;
-
-let rec unvrai f l = match l with
-	|[] -> false
-	|x::xs -> if f x then true else unvrai f xs;;
-
-let rec unvraiteretourne f l casbase =  (*print_string "ok ! ";*)match l with
-	|[] -> (false,casbase)
-	|x::xs ->let (a,b) = f x in if a then (a,b) else unvraiteretourne f xs casbase;;
-
-type pattern = string*int;;
 
 
 (*########## LES TYPES ##########*)
@@ -52,6 +38,7 @@ type ('q, 'sm, 's, 't) automate_priorisant_quiecrit_avecmemoire = ('q*'sm,'s,'t)
 
 
 
+type pattern = string*int;;
 (*########## LES FONCTIONS SUR LES TYPES ##########*)
 
 let rec deltaetoile_det (qq,i,f,delta) (q,m) = match m with
