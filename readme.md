@@ -48,4 +48,4 @@ x_0^{x_1}+x_1^{x_0}
 (frac{{x_{1}}}{{x_{0}}})*({x_{0}}^{x_{1}})+(ln({x_{1}}))*({x_{1}}^{x_{0}})
 ```
 Il s'agit d'une fonction et de sa dérivée par rapport à x_0. Voici le rendu obtenu grâce à Latex :
-![alt text](https://github.com/UlysseDurand/CalculFormel/blob/main/calculformel/readme/resultat.png?raw=true)
+![alt text](https://github.com/UlysseDurand/CalculFormel/blob/master/readme/resultat.png?raw=true)
