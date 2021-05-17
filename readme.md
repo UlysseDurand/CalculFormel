@@ -15,7 +15,7 @@ Il constitue environ 120h de travail.
 L'entièreté de ce qui est contenu dans le projet est le fruit de recherche personnelle. Les méthodes employées et leur implémentation sont personnelles.
 
 ## Essayer le projet :
-Par méconnaissance dans le monde de la compilation de Caml, lancer le programme vous devrez vous placer dans le dossier calculformel et lancer 
+Pour lancer le programme vous devrez vous placer dans le dossier calculformel et lancer 
 ```bash
 make toplevel
 ```
