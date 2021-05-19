@@ -15,10 +15,19 @@ Il constitue environ 120h de travail.
 L'entièreté de ce qui est contenu dans le projet est le fruit de recherche personnelle. Les méthodes employées et leur implémentation sont personnelles.
 
 ## Essayer le projet :
-Pour lancer le programme vous devrez vous placer dans le dossier calculformel et lancer 
+Pour essayer, modifiez le fichier calculformel/main.ml à votre guise. Pour compiler et lancer le programme, vous devrez vous placer dans le dossier calculformel et lancer
 ```bash
-make toplevel
+make all
 ```
+Pour simplement lancer le programme déjà compilé, executez
+```bash
+make
+```
+Si votre programme écrit du latex dans le fichier sortie.txt, vous pouvez directement afficher votre résultat dans un fichier calculformel/sortie.pdf en executant
+```bash
+make complet
+```
+
 
 Vous pourrez modifier le fichier main.ml à votre guise. Voici les fonctions caml ajoutées :
 ```OCaml
@@ -39,9 +48,9 @@ let exprb = (derive 0 expra);; 				 (*derive l'expression par rapport à x_0*)
 let exprbsimpl = snd (simplifiebis exprb);;	 (*simplifie l'expression obtenue*)
 let exprlatexb = affiche exprbsimpl;;		 (*transforme l'expression en latex*)
 
-ecritdansfichier "res.txt" [exprlatexa ; "\\\\" ; exprlatexb];;
+ecritdansfichier "sortie.txt" [exprlatexa ; "\\\\" ; exprlatexb];;
 ```
-Voici le contenu de res.txt : 
+Voici le contenu de sortie.txt : 
 ```latex
 x_0^{x_1}+x_1^{x_0}
 \\

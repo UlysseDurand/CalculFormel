@@ -1,49 +1,65 @@
-let explode s = let res = ref [] in for i=0 to (String.length s)-1 do res:=((String.get s i)::(!res)); done;!res;;
-let rec implode cl = match cl with |[]->"" |x::xs -> (implode xs)^(Char.escaped x);;
+(*##### FONCTIONS UTILES #####*)
 
-let decomp comp = (fun x->let a,b = comp x in a),(fun x->let a,b = comp x in b);;
+let explode s = let res = ref [] in for i=0 to (String.length s)-1 do res:=((String.get s i)::(!res)); done;!res
+let rec implode cl = match cl with |[]->"" |x::xs -> (implode xs)^(Char.escaped x)
 
-let compo f g = fun x->(f x, g x);;
+let decomp comp = (fun x->let a,b = comp x in a),(fun x->let a,b = comp x in b)
 
-type 'q automate = Aut of 'q*('q -> bool)*( ('q->char)->'q);; (*Ici, Q = 'q et \Sigma = char, on a Aut(I,F,\delta)*)
+let compo f g = fun x->(f x, g x)
 
-type 'q automatequiecrit = AutQe of 'q*('q -> bool)*(('q*char)->'q*char list) ;; (*Ici, Q = `q, \Sigma = \Sigma ' = char , on a AutQe(I,F,(\delta,\eta))*)
 
-type ('q,'a) automatequiecritavecmemoire = (('q*'a) automatequiecrit);;
 
-let exemple = "%0%+%1%";;
+
+
+(*##### TYPES UTILES #####*)
+
+type 'q automate = Aut of 'q*('q -> bool)*( ('q->char)->'q) 
+(*Ici, Q = 'q et \Sigma = char, on a Aut(I,F,\delta)*)
+
+type 'q automatequiecrit = AutQe of 'q*('q -> bool)*(('q*char)->'q*char list)  
+(*Ici, Q = `q, \Sigma = \Sigma ' = char , on a AutQe(I,F,(\delta,\eta))*)
+
+type ('q,'a) automatequiecritavecmemoire = (('q*'a) automatequiecrit)
+
+
+
+
+
+(*##### FONCTIONS SUR CES TYPES #####*)
 
 let rec delta_etoile a (q,m) = let (initiaux,finaux,delta) = a in match m with 
     |[]-> q
-    |x::xs->delta_etoile a ((delta q x),xs);;
+    |x::xs->delta_etoile a ((delta q x),xs)
 
 let rec delta_etoile_ecrit a (q,m) = let (initiaux,finaux,(delta,eta)) = a in match m with 
     |[]-> q
-    |x::xs->delta_etoile_ecrit a ((delta q x),xs);;
+    |x::xs->delta_etoile_ecrit a ((delta q x),xs)
 
 let rec eta_etoile_ecrit a m (q,mem) = let AutQe(initial,finaux,grossefonc) = a in let delta,eta = decomp grossefonc in match m with
     |[]->[]
-    |x::xs->let nq,nmem = (delta ((q,mem),x)) in (eta ((q,mem),x) )@(eta_etoile_ecrit a xs (nq,nmem));;
+    |x::xs->let nq,nmem = (delta ((q,mem),x)) in (eta ((q,mem),x) )@(eta_etoile_ecrit a xs (nq,nmem))
 
-let executautomate a m = let AutQe(initial,finaux,grossefonc) = a in eta_etoile_ecrit a m initial;;
-
-
-
-let incr (pe,s,a,b) = (pe+1,s,a,b);;
-
-let lindice l e = let res = ref (-1) in for i=0 to (Array.length l)-1 do if l.(i) = e then (res:=i); done;!res;; 
-
-let a =0;;
-
-let chiffres = [|'0';'1';'2';'3';'4';'5';'6';'7';'8';'9'|];;
-
-let chiffre  e = lindice chiffres e;;
-
-type memoire = int*(char list)*int*int;;
-
-type etat = int*memoire;;
+let executautomate a m = let AutQe(initial,finaux,grossefonc) = a in eta_etoile_ecrit a m initial
 
 
+
+
+
+(*##### AutoLanguInv #####*)
+
+let incr (pe,s,a,b) = (pe+1,s,a,b)
+
+let lindice l e = let res = ref (-1) in for i=0 to (Array.length l)-1 do if l.(i) = e then (res:=i); done;!res 
+
+let a =0
+
+let chiffres = [|'0';'1';'2';'3';'4';'5';'6';'7';'8';'9'|]
+
+let chiffre  e = lindice chiffres e
+
+type memoire = int*(char list)*int*int
+
+type etat = int*memoire
 
 let lafonct n rendv ((q,mem),l) = 
     let rec fung (s,a,b) = 
@@ -67,10 +83,16 @@ let lafonct n rendv ((q,mem),l) =
         |3 -> if l=';' then (2,(pe+1,s,0,0)),(fung (s,a,b)) else 
                 let lc = (chiffre l) in if lc>=0 then (3,(pe+1,s,a,10*b+lc)),[] else 
                 erreur ()
-        |_ -> failwith "ETAT NON ATTEIGNABLE";;
+        |_ -> failwith "ETAT NON ATTEIGNABLE"
 
-let rec lerendv a = ['x';'_']@['{']@(List.rev (explode (string_of_int a ) ))@['}'];;
+let rec lerendv a = ['x';'_']@['{']@(List.rev (explode (string_of_int a ) ))@['}']
 
-let automatelatex n rendv = AutQe( (0,(0,[],0,0)) , (fun (q,mem) -> q=0) ,(lafonct n rendv));;
+let automatelatex n rendv = AutQe( (0,(0,[],0,0)) , (fun (q,mem) -> q=0) ,(lafonct n rendv))
 
-let evaluelatex n rendv txt = implode (List.rev (executautomate (automatelatex n rendv) (List.rev(explode txt))));;
+
+
+
+
+(*##### Compile_Languinv #####*)
+
+let compile_languinv n rendv txt = implode (List.rev (executautomate (automatelatex n rendv) (List.rev(explode txt))))

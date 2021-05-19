@@ -1,8 +1,0 @@
-#use "misc.ml";;
-#use "automate.ml";;
-#use "automate3.ml";;
-#use "analyse.ml";;
-#use "main.ml";;
-
-(*
-#use "testons.ml";;*)
