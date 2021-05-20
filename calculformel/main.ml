@@ -7,4 +7,4 @@ let exprb = (derive 0 expra);; 				 (*derive l'expression par rapport à x_0*)
 let exprbsimpl = snd (simplifiebis exprb);;	 (*simplifie l'expression obtenue*)
 let exprlatexb = affiche exprbsimpl;;		 (*transforme l'expression en latex*)
 
-ecritdansfichier "sortie.txt" [exprlatexa ; "\\\\" ; exprlatexb];;
+ecritdansfichier "sortie.txt" [(affiche expra); "\\\\" ; exprlatexb];;

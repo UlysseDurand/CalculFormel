@@ -20,7 +20,7 @@ complet:
 	@printf '%s\n' "\documentclass[12pt]{article}" > sortie.tex
 	@printf '%s\n' "\usepackage{amsmath} \everymath{\displaystyle}" >> sortie.tex
 	@printf '%s\n\n' "\begin{document} res.txt : \\\\" >> sortie.tex
-	@printf '%s\n' "\Large \begin{gather*}" >> sortie.tex
+	@printf '%s\n' " \begin{gather*}" >> sortie.tex
 	@cat sortie.txt | sed -e 's/frac/\\frac/g' -e 's/(/\\left(/g' -e 's/)/\\right)/g' >> sortie.tex
 	@printf '%s\n' "\end{gather*}" >> sortie.tex
 	@printf '\n%s\n' "\\end{document}" >> sortie.tex

@@ -83,7 +83,7 @@ let rec inverse = {
 	}
 
 let rec divise = 
-    let vraiefonction = (F(fois, [| F(inverse, [|V 0|]) ; V 1 |] )) in    
+    let vraiefonction = (F(fois, [| V 0 ; F(inverse, [|V 1|]) |] )) in    
     {
         nbvar=2;
         affichage="frac{%|0;%}{%|1;%}";
@@ -122,20 +122,22 @@ let exponentielle_base =
 
 let unretourope lop lte c = let lc = Array.map lte c in F(lop,lc)
 
-let lesgrospatterns = [
-        ("frac{%|0;%}{%|1;%}",2,unretourope divise);
-        (*("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));*)
+let lesgrospatterns = 
+	[
+		("frac{%|0;%}{%|1;%}",2,unretourope divise);
+		(*("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));*)
 		("{%|0;%}",1,fun lte c -> lte c.(0));
-        ("ln(%|0;%)",1, unretourope ln);
+		("ln(%|0;%)",1, unretourope ln);
 		("exp(%|0;%)",1,unretourope exponentielle);
-        ("%|0;%*%|1;%",2,unretourope fois);
-        ("%|0;%+%|1;%",2,unretourope plus);
-        ("%|0;%-%|1;%",2,unretourope moins);
-        ("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] ));
-        ("-%|0;%",1,unretourope oppose);
-        ("%|0;%^%|1;%",2, unretourope exponentielle_base);
-		("x_%|0;%",1,fun lte c -> (* print_string (implode c.(0)); *)(V (int_of_string (implode c.(0))) ) );
-        ("%|0;%",1,fun lte c -> (C (float_of_string (implode c.(0))) ) )
+		("(%|0;%*%|1;%)",2,unretourope fois);
+		("(%|0;%)",1,fun lte c -> lte c.(0));
+		("%|0;%+%|1;%",2,unretourope plus);
+		("%|0;%-%|1;%",2,unretourope moins);
+		("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] ));
+		("-%|0;%",1,unretourope oppose);
+		("%|0;%^%|1;%",2, unretourope exponentielle_base);
+		("x_%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) (V (int_of_string (implode c.(0))) ) );
+		("%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) (C (float_of_string (implode c.(0))) ) )
     ]
 
  
