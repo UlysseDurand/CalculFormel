@@ -1,5 +1,7 @@
 # Logiciel de Calcul Formel en OCaml
 
+Le document explicatif est ![ICI](https://github.com/UlysseDurand/CalculFormel/blob/master/readme/calculformel.pdf)
+
 Il s'agit d'un projet sans se documenter, il a été réalisé juste avec les connaissances d'option informatique, notamment concernant les automates. Le but étant de forcer la réflexion et la créativité, et de redécouvrir par soi même des concepts déjà existants.
 
 ## Fonctionnalitées:
@@ -57,4 +59,4 @@ x_0^{x_1}+x_1^{x_0}
 (frac{{x_{1}}}{{x_{0}}})*({x_{0}}^{x_{1}})+(ln({x_{1}}))*({x_{1}}^{x_{0}})
 ```
 Il s'agit d'une fonction et de sa dérivée par rapport à x_0. Voici le rendu obtenu grâce à Latex :
-![alt text](https://github.com/UlysseDurand/CalculFormel/blob/master/readme/resultat.png?raw=true)
+![jolieresultat](https://github.com/UlysseDurand/CalculFormel/blob/master/readme/resultat.png?raw=true)
