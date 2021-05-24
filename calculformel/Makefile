@@ -7,7 +7,7 @@ all:
 	@make -s execute
 	
 compile:
-	@ocamlopt misc.ml automate.ml automate3.ml analyse.ml main.ml -o calculformel
+	@ocamlopt misc.ml automate_affiche.ml automate_parse.ml analyse.ml main.ml -o calculformel
 	
 clean:
 	@rm -f *.cmi

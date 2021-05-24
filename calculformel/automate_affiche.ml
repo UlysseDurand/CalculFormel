@@ -45,7 +45,7 @@ let executautomate a m = let AutQe(initial,finaux,grossefonc) = a in eta_etoile_
 
 
 
-(*##### AutoLanguInv #####*)
+(*##### AutoSpecial #####*)
 
 let incr (pe,s,a,b) = (pe+1,s,a,b)
 
