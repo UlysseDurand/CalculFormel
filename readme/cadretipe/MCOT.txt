@@ -1,0 +1,36 @@
+Conception d'un interpréteur via un logiciel de calcul formel.
+
+Il s'agit d'un projet sans se documenter, il a été réalisé juste avec les connaissances d'option informatique. Le but étant de redécouvrir par soi-même des concepts déjà existants
+J'ai été ammené à réinventer ce dont j'avais besoin.
+Je suis passé par la conception d'un language personnel représentant des motifs, un interpréteur de ce language, j'ai manipulé beaucoup d'automates en inventant des extensions de ces derniers, fais un parser de code LaTeX, et bien d'autres choses.
+
+Ancrage  au thème de l’année :
+Tous les programmes informatique de systèmes se voulant sécurisés (transaction, vote en ligne) font appel à des interpréteurs de code. En faisant un interpréteur soi-même, et en sachant qu'il ne contient pas de virus, il n'est pas le défaut de sécurité d'un système se voulant sécurisé.
+
+Motivation du choix de l'étude :
+Il s'agit d'un projet sans se documenter, le but étant de redécouvrir par soi-même des concepts déjà existants.
+J'ai conçu un interpréteur d'un language personnel, donc un parser de code, implémenté des fonctionnalités de calcul, ou un compilateur vers LaTeX entre autres.
+
+Positionnement thématique :
+INFORMATIQUE (Informatique théorique)
+INFORMATIQUE (Informatique Pratique)
+
+Mots-clés :
+Formal Calculation
+Automaton
+Pattern-matching
+Compilation
+Parser
+
+Bibliographie commentée :
+
+
+
+Problématique :
+Est-il possible de faire un code dans lequel on a confiance en l'execution ?
+
+
+Objectifs :
+-Arriver par le biais d'un logiciel de calcul formel à concevoir un parser, un interpréteur, dans lequel on a confiance.
+-Concevoir un compilateur vers LaTeX.
+-Développer des fonctionnalités sur les expressions algébriques (évaluation, dérivation).
