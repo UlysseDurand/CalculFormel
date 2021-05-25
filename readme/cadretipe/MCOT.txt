@@ -22,15 +22,27 @@ Pattern-matching
 Compilation
 Parser
 
-Bibliographie commentée :
-
-
+Bibliographie commentée (Bibliographie à la fin):
+Dans l'ensemble des outils permettant à un programme de fonctionner, il y en a un fondamental qui est l'interpréteur : il est indispensable pour comprendre l'ensemble des instructions que l'on souhaite faire faire au processeur. Comprendre via un programme informatique, le contenu d'un code dans un language, cela passe via un parser (analyseur syntaxique) qui dérive de l'idée de reconnaître des patterns dans une chaîne de caractères [2]. Pour se faire nous sommes passés par des automates bien particuliers, mais la méthode classique consiste par un autre type d'automate particulier, les automates à pile [1]. Ensuite une l'analyse syntaxique faite, il faut maintenant exploiter son résultat pour convertir notre chaîne de caractères en une autre forme (souvent en code C++, ou en Assembleur), cette traduction d'un language à un autre est faite par un compilateur [3].
+A la fin, on a l'ensemble des éléments constituant un système traduisant un code dans un language haut niveau en un autre language plus bas niveau. Nous recréerons ces outils dans le cadre de la conception d'un logiciel de calcul formel.
 
 Problématique :
-Est-il possible de faire un code dans lequel on a confiance en l'execution ?
-
+Comment traiter du code dans un language ? Un assistant de calcul peut-il facilement communiquer avec un utilisateur ?
 
 Objectifs :
--Arriver par le biais d'un logiciel de calcul formel à concevoir un parser, un interpréteur, dans lequel on a confiance.
+-Arriver par le biais d'un logiciel de calcul formel à concevoir un parser, un interpréteur de LaTeX.
 -Concevoir un compilateur vers LaTeX.
 -Développer des fonctionnalités sur les expressions algébriques (évaluation, dérivation).
+
+
+
+BIBLIOGRAPHIE :
+AUTOMATES A PILE : Langages formels, calculabilité et complexité
+Olivier Carton
+28 octobre 2008
+
+PARSER : (en) Dick Grune (en), Ceriel J.H. Jacobs, Parsing Techniques - A Practical Guide [archive], Ellis Horwood, Chichester, England, 1990
+
+COMPILATEUR : (en) Alfred V. Aho, Ravi Sethi, Jeffrey D. Ullman, Compilers: Principles, Techniques, and Tools, Addison Wesley Publishing Company, 1986.
+
+INTERESSANT : (en) Erik Meijer, Maarten Fokkinga et Ross Paterson, « Functional Programming with Bananas, Lenses, Envelopes and Barbed Wire », CiteSeerX,‎ 1991
