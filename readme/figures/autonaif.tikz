@@ -1,0 +1,27 @@
+\begin{tikzpicture}[thick,scale=0.8, every node/.style={transform shape}]
+	\def\sc{1};
+	\node [shape=circle,draw=black] (0) at (0, 0) {0};
+	\node [shape=circle,draw=black] (1) at (2, 0) {1};
+	\node [shape=circle,draw=black] (2) at (4, 0) {2};
+	\node [shape=circle,draw=black] (3) at (6, 0) {3};
+	\node [shape=circle,draw=black] (4) at (8, 0) {4};
+	\node [shape=circle,draw=black] (5) at (10, 0) {5};
+	\node [shape=circle,draw=black] (6) at (12, 0) {6};
+	\node [shape=circle,draw=black] (7) at (14, 0) {7};
+	\node [shape=circle,draw=black] (8) at (16, 0) {8};
+  \node [] (9) at (-1,0) {};
+  \node [] (10) at (17,0) {};
+
+	\draw [->] (0) to node[above,scale=\sc] {\chcar{f}} (1);
+	\draw [->] (1) to node[above,scale=\sc] {\chcar{r}} (2);
+	\draw [->] (2) to node[above,scale=\sc] {\chcar{a}} (3);
+	\draw [->] (3) to node[above,scale=\sc] {\chcar{c}} (4);
+	\draw [->] (4) to node[above,scale=\sc] {\chcar{ \{ }} (5);
+	\draw [->] (5) to node[above,scale=\sc] {\chcar{ \} }} (6);
+	\draw [->] (6) to node[above,scale=\sc] {\chcar{ \{ }} (7);
+	\draw [->] (7) to node[above,scale=\sc] {\chcar{ \} }} (8);
+	\draw [->, in=135, out=45, loop] (5) to node[above,scale=\sc] {\chcar{c} $\mapsto$ \codecml{[|[\chcar{c}];[]|]}} ();
+	\draw [->, in=135, out=45, loop] (7) to node[above,scale=\sc] {\chcar{c} $\mapsto$ \codecml{[|[];[\chcar{c}]|]}} ();
+  \draw [->] (9) to (0);
+  \draw [->] (8) to (10);
+\end{tikzpicture}

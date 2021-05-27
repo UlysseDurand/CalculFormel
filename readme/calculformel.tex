@@ -394,6 +394,24 @@ let dansph n = {neutre = arrayvide n; operation = concat_dansph}
 
 Pour ce qui est de \codecml{autoprio}, il sera bien plus long \`a expliquer, cela constituera alors une prochaine partie.
 
+\subsubsection{\codecml{autoMagique}}
+Pour reconna\^itre par exemple le motif en LanguInv suivant : \chcar{frac{\%|0;\%}{\%|1;\%}}, le premier automate inagin\'e \'etait celui figure 3.
+\unefiguretikz{autonaif}{Automate naïf}
+Mais avec cet automate d\'eterministe, on rencontre vite un probl\`eme.\\
+Pour \chcar{frac\{\{aHA\}\}\{bab\}}, l'automate retournera \`a l'\'etat 6 \codecml{[|}\chcar{\{aHA}\codecml{,[]|]}.\\
+Pour rem\'edier \`a ce probl\`eme, l'id\'ee est de passer par un automate non d\'eterministe, o\`u \`a l'\'etat 5, pour la lettre \chcar{\}}, il y ait une transition vers l'\'etat 6 et une vers l'\'etat 5.\\
+Ainsi deux parcours de l'automate seront possibles :
+\begin{itemize}
+  \item Le parcours d\'ecrit pr\'ec\'edement, qui \'echoue \`a l'\'etape 6
+  \item Le parcours qui reste \`a 5 apr\`es avoir reconnu une premi\`ere fois \chcar{\{}
+\end{itemize}
+Ce dernier parcours reconna\^it bien le mot et retournera le r\'esultat attendu : \codecml{[|\chcar{aHA};\chcar{bab}|]}\\
+Alors c'est maintenant la question de comment construire cet automate qui \'ecrit avec un autre automate qui \'ecrit, l'autoMagique.\\\\
+L'id\'ee est la suivante : On va assembler des automates avec des op\'erations de concat\'enation bien sp\'ecifiques.\\\\
+Tout d'abordm uk
+
+
+
 \listoffigures
 \end{document}
 
