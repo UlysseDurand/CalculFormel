@@ -127,7 +127,7 @@ $
 Nous traiterons les expressions alg\'ebriques en les repr\'esentant par des arbres d'expression.\\
 
 l'arbre Figure1 repr\'esente l'expression alg\'ebrique $\frac{x+3}{-y}$ : \\
-\unefiguretikz{arbrexpr}{Exemple d'arbre d'expression}
+\unefiguretikz{fig1}{Exemple d'arbre d'expression}
 \\
 On discernera :
 \begin{itemize}
@@ -277,7 +277,7 @@ Voici l'automate \codecml{autospecial n rendph s} (correspond \`a $\delta^\star(
 avec $n$ un entier et $N = \{\chcar{0},\chcar{1},
 \chcar{2},\chcar{3},\chcar{4},\chcar{5},\chcar{6},\chcar{7},\chcar{8},\chcar{9}\}$\\
 
-\unefiguretikz{lautomate}{Automate de \codecml{evaluelatex}}
+\unefiguretikz{fig2}{Automate de \codecml{evaluelatex}}
 Notre automate qui \'ecrit avec m\'emoire est d\'eterministe, il a pour ensemble d'\'etats pur $\{0,1,2,3\}$, pour ensemble d'\'etats m\'emoire \codecml{(char list)*int*int}, le \codecml{char list} sert \`a stocker le d\'elimiteur en m\'emoire, et \codecml{int*int} \`a stocker le i et j d\'esignants les bornes de l'ensemble des indices de placeholder. L'automate a omme \'etat initial $0$, comme ensemble d'\'etats finaux $\{0\}$ et comme alphabet de d\'epart et d'arriv\'ee, \codecml{char}.\\
 Si A est cet automate qui écrit, \codecml{n = 6}, \codecml{rendph a} retourne \chcar{x\_}a (a entier)\\
 fung est d\'efini ainsi en OCaml :
@@ -397,10 +397,11 @@ Pour ce qui est de \codecml{autoprio}, il sera bien plus long \`a expliquer, cel
 \subsection{\codecml{autoMagique}}
 L'automate retourn\'e par autoMagique doit alors reconna\^itre un \codecml{char list} et son espace d'\'ecriture sera \codecml{dansph}, ainsi dans le tableau qu'il retournera, \`a l'indice $i$ on retrouvera ce qu'il y a dans \`a la place du placeholder $i$.
 Pour reconna\^itre par exemple le motif en LanguInv suivant : \chcar{frac{\%|0;\%}{\%|1;\%}}, le premier automate inagin\'e \'etait celui figure 3.
-\unefiguretikz{autonaif}{Automate naïf}
+\unefiguretikz{fig3}{Automate naïf}
 Mais avec cet automate d\'eterministe, on rencontre vite un probl\`eme.\\
 Pour \chcar{frac\{\{aHA\}\}\{bab\}}, l'automate retournera \`a l'\'etat 6 \codecml{[|\chcar{"\{aHA"},[]|]}, et sera bloqu\'e.\\
-Pour rem\'edier \`a ce probl\`eme, l'id\'ee est de passer par un automate non d\'eterministe, o\`u \`a l'\'etat 5, pour la lettre \chcar{\}}, il y ait une transition vers l'\'etat 6 et une vers l'\'etat 5.\\
+Pour rem\'edier \`a ce probl\`eme, l'id\'ee est de passer par un automate non d\'eterministe, o\`u \`a l'\'etat 5, pour la lettre \chcar{\}}, il y ait une transition vers l'\'etat 6 et une vers l'\'etat 5. (Figure 6)\\
+\unefiguretikz{fig4}{Automate naïf corrig\'e}
 Ainsi deux parcours de l'automate seront possibles :
 \begin{itemize}
   \item Le parcours d\'ecrit pr\'ec\'edement, qui \'echoue \`a l'\'etape 6
@@ -416,7 +417,7 @@ Dans cet \codecml{autoprio}, on aura deux "briques" principales, et si on concat
 Alors on aura un type \codecml{typautoprio} en deux sous type (chacun associ\'e \`a une "brique").\\
 La premi\`ere "brique" sera appell\'ee \codecml{autobrique} et la deuxi\`eme \codecml{recoph}.\\
 
-{\Large TODO : AJOUTER FIGURE AUTOBRIQUE ET RECOPH}
+{\Large TODO : AJOUTER FIGURE AUTOBRIQUE ET RECOPH}\\
 
 Alors, associ\'e \`a \codecml{autobrique} nous aurons le type \codecml{AutDom} (automate dominant), dans ce type on aura un \codecml{char} de renseign\'e (correspondant \`a un caract\`ere \`a reconnaitre pour aller d'un \'etat $i$ \`a un \'etat $i+1$), en plus d'un automate non d\'eterministe qui \'ecrit.\\
 Associ\'e \`a \codecml{recoph}, nous aurons le type \codecml{Aut} (automate), dans ce type nous aurons un \codecml{int} de renseign\'e (correspondant \`a un indice de placeholder), ainsi qu'un automate non d\'eterministe qui \'ecrit
@@ -433,13 +434,42 @@ Pour l'op\'eration de concat\'enation de \codecml{a} et \codecml{b} (a,b de type
 \codecml{ajoufin auta autb l} retournera l'automate o\`u on "ajoute" l'automate \codecml{autb} \`a la fin de l'automate \codecml{auta}.\\
 C'est \`a dire que l'on cr\'ee une nouvelle transition de tous les \'etats finaux de l'automate a vers l'\'etat initial de l'automate b, le nouvel \'etat initial est celui de \codecml{auta} et les nouveaux \'etats finaux sont ceux de \codecml{autb}.\\\\
 \codecml{agraphefin auta autb l} retournera l'automate o\`u on "agraphe" l'automate \codecml{autb} de mani\`ere \`a ce que l'\'etat final de \codecml{auta} se voit "fusionn\'e" avec l'\'etat initial de \codecml{autb}.\\
-C'est \`a dire que les transitions allant vers un \'etat final de \codecml{auta} sont redirig\'ees vers l'\'etat initial de \codecml{autb}.
+C'est \`a dire que les transitions allant vers un \'etat final de \codecml{auta} sont redirig\'ees vers l'\'etat initial de \codecml{autb}. \\
+{\Large TODO : AJOUTER FIGURE AUTOMAGIQUE}\\
 
+\subsubsection{le r\'esultat}
+Maintenant, avec cet espace d'\'ecriture, si on note d'un \texttildelow l'op\'eration de concat\'enation, alors\\
+(\chcar{f},\codecml{autobrique})\texttildelow(\chcar{r},\codecml{autobrique})\texttildelow(\chcar{a},\codecml{autobrique})\texttildelow(\chcar{c},\codecml{autobrique})\texttildelow(\chcar{\{},\codecml{autobrique})\texttildelow \\ (\codecml{recoph 0})\texttildelow(\chcar{\}},\codecml{autobrique})\texttildelow(\chcar{\{},\codecml{autobrique})\texttildelow(\codecml{recoph 1})\texttildelow(\chcar{\}},\codecml{autobrique}) sera \'egal \`a l'automate Figure4.
 \end{itemize}
 
+\subsection{\codecml{autoMagique}}
+Voil\`a \`a quoi ressemble notre \codecml{autoMagique}.
+\unefiguretikz{fig5}{\codecml{autoMagique}}
+C'est le m\^eme que Figure2 mais qui \'ecrit \'a la place des lettre reconnues, les autobriques avec la lettre.
+Notre fonction \codecml{automate\_parser} est donc maintenant compl\`ete, c'est la fonction associ\'ee \`a l'\codecml{autoMagique}. Rappelons que cette fonction, \`a un motif en LanguInv, associe un automate qui \'ecrit, qui lui, reconna\^it ou non une entr\'ee par rapport au motif en LanguInv, et retourne si oui, retourne les cha\^ines de caract\`eres \`a la place des placeholders.
 
+\subsection{Pour une liste de motifs}
+\subsubsection{La fonction unvrai}
+Bien s\^ur, nous n'essaierons pas de reconna\^itre qu'un seul motif par rapport \`a notre entr\'ee.\\
+L'id\'ee est la suivante : il faut tester le premier motif de notre liste de motifs. Si il est reconnu, alors on utilise le r\'esultat de ce premier motif, sinon, on passe au suivant, et ainsi de suite.\\
+Nous utiliserons alors une fonction \codecml{unvrai : 'a list -> ('a -> bool*'b) -> 'b -> bool*'b}\\
+\codecml{unvrai l f neut} retournera $f(x)$ pour $x$ le premier \'element de $l$ tel que \codecml{fst (f x)} soit \`a \codecml{true}. Si \codecml{fst (f x)} est \`a \codecml{false} $\forall x \in l$, alors cette fonction renverra \codecml{(false,neut)}.
+\subsubsection{Que faire de ces motifs}
+On a une liste de pattern, mais on veut faire du pattern-matching, donc \`a chaque pattern, on veut associer un "match", c'est \`a dire renseigner ce que l'on renvoit en fonction du retour de l'automate associ\'e au pattern. Ce "match" sera une fonction prenant en entr\'ee \`a la fois le retour de l'automate associ\'e au motif, mais prendra aussi la fonction \codecml{parse\_latex} pour pouvoir \'eventuellement l'appliquer r\'ecursivement.\\\\
+Voil\'a \`a quoi peut ressembler le pattern-match associ\'e \`a l'op\'eration d'addition :\\
+\codecml{\chcar{"\%|0;\%+\%|1;\%"},fun retour parse -> F(plus,[|parse retour.(0) ; parse retour.(1)|])}
 
-
+\subsubsection{\codecml{parse\_latex}}
+Maintenant que nous avons tous les \'elements, nous pouvons enfin de nous lancer dans la construction de \codecml{parse\_latex}.\\
+Il suffit en fait simplement d'utiliser la fonction \codecml{unvrai}, pour laquelle il nous faudra un neutre, qui pourra \^etre l'expression \codecml{C(0.)}, avec comme fonction \\
+\codecml{fun (patt,funpatt)-> let a,b=reco\_pattern patt mot in if a then (a,funpatt b) else (false, C(0.))}.
+On appliquera tout ceci \`a notre liste de pattern-matching.
+\section{Une extension : simplifier les expressions}
+Il s'agit ici de faire un pattern-matching sur les arbres d'expression. Alors pour nous servir de motif, on utilisera un arbre d'expression, o\`u la variable indic\'ee par $i$ sera le placeholder $i$.\\\\
+{\Large TODO : afficher un exemple de ce pattern-matching.}\\
+Un exemple de couple pattern-matching, serait l suivant : \\
+\codecml{(F(inv,[|F(inv,[| V(0) |])|]),fun simpl retour -> simpl retour.(0))}\\\\
+Mais ainsi on aura pas totalement simplifi\'e notre expression, donc une derni\`ere id\'ee c'est de faire ce pattern-matching de notre liste de pattern-match sur notre expression tant qu'une simplification est effectu\'ee.
 \listoffigures
 \end{document}
 

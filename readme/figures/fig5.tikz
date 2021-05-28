@@ -1,0 +1,22 @@
+\begin{tikzpicture}[thick,scale=0.8, every node/.style={transform shape}]
+	\def\sc{0.65}
+	\node [shape=circle,draw=black] (0) at (0, 0) {0};
+	\node [shape=circle,draw=black] (1) at (5, 0) {1};
+	\node [shape=circle,draw=black] (2) at (10, 0) {2};
+	\node [shape=circle,draw=black] (3) at (15, 0) {3};
+	\node [] (4) at (-2, 0) {};
+	\node [] (5) at (0, -2) {};
+	\draw [->, in=165, out=15, looseness=0.75] (0) to node [ above, scale=\sc] {$\begin{pmatrix} M \\ \chcar{\%} \end{pmatrix} \mapsto \begin{pmatrix} (\text{''},0,0) \\ \epsilon \end{pmatrix} $} (1);
+	\draw [->, in=45, out=135, loop] (1) to node [ above, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ l \notin \{\chcar{\%},\chcar{|}\} \end{pmatrix} \mapsto \begin{pmatrix} (s \hspace{0.1cm} \hat{}\hspace{0.1cm} l,a,b) \\ \epsilon \end{pmatrix} $} ();
+	\draw [->, bend left=15, looseness=0.75] (2) to node [ below, scale=\sc] {$\begin{pmatrix} M \\ \chcar{\%} \end{pmatrix} \mapsto \begin{pmatrix} M \\ \epsilon \end{pmatrix} $} (0);
+	\draw [->, in=45, out=135, loop] (1) to node [ above, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ l \notin \{\chcar{\%},\chcar{|}\} \end{pmatrix} \mapsto \begin{pmatrix} (s \hspace{0.1cm} \hat{}\hspace{0.1cm} l,a,b) \\ \epsilon \end{pmatrix} $} ();
+	\draw [->] (1) to node [ above, scale=\sc] {$\begin{pmatrix} M \\ \chcar{|} \end{pmatrix} \mapsto \begin{pmatrix} M \\ \epsilon \end{pmatrix} $} (2);
+	\draw [->, in=45, out=135, loop] (2) to node [ above, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ c \in N \end{pmatrix} \mapsto \begin{pmatrix} (s,10a+c,b) \\ \epsilon \end{pmatrix} $} ();
+	\draw [->, bend left=15, looseness=0.75] (2) to node [ above, scale=\sc] {$\begin{pmatrix} M \\ \chcar{-} \end{pmatrix} \mapsto \begin{pmatrix} M \\ \epsilon \end{pmatrix} $} (3);
+	\draw [->, in=45, out=135, loop] (3) to node [ above, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ c \in N \end{pmatrix} \mapsto \begin{pmatrix} (s,a,10b+c) \\ \epsilon \end{pmatrix} $} ();
+	\draw [->, in=45, out=135, loop] (0) to node [ above, scale=\sc] {$\begin{pmatrix} M \\ l \neq \chcar{\%} \end{pmatrix} \mapsto \begin{pmatrix} M \\ \codecml{AutDom(}l\codecml{,autobrique)} \end{pmatrix} $} ();
+	\draw [->, bend left=15, looseness=0.75] (3) to node [ below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \chcar{;} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,0) \\ \text{fung } (s,a,b) \end{pmatrix} $} (2);
+	\draw [->, in=-90, out=-45, loop] (2) to node [below, scale=\sc] {$\begin{pmatrix} (s,a,b) \\ \chcar{;} \end{pmatrix} \mapsto \begin{pmatrix} (s,0,0) \\ \text{rendph } a \end{pmatrix} $} ();
+	\draw [->] (4.center) to node[above,scale=\sc] {(\text{''},0,0)} (0);
+	\draw [->] (0) to (5.center);
+\end{tikzpicture}   
