@@ -24,7 +24,7 @@ type ('q, 's) automate_nondet = ('q -> bool)*('q list)*('q -> bool)*('q*'s -> 'q
 type ('q, 's) automate_priorisant = ('q, 's) automate_nondet
 
 type ('q, 's, 't) automate_det_quiecrit = ('t espace_ecriture)*(('q*'t, 's ) automate_det)
-(*structure : (monsig2,(Q,I,F,delta)) 
+(*structure : (monsig2,(Q,I,F,delta))
 Q \inc 'q
 \Sigma = 's
 \Sigma_2 = 't (o\`u qu'on ecrit)
@@ -65,16 +65,16 @@ let rec deltaetoile_nondet (qq,i,f,delta) (q,m) = match m with
 	|x::xs -> let suivants = delta (q,x) in
 		List.flatten (
 			List.map (fun qs -> deltaetoile_nondet (qq,i,f,delta) (qs,xs) )
-					 suivants 
+					 suivants
 		)
 
-let rec reconnaitmot_nondet (qq,i,f,delta) m = 
+let rec reconnaitmot_nondet (qq,i,f,delta) m =
 	List.mem true (List.map (fun x->f (deltaetoile_nondet (qq,i,f,delta) (x,m)) ) i)
 
 let rec deltetaetoile_det_quiecrit_avecmemoire (esecr,(qq,i,f,delteta)) ((q,mem),m) = match m with
     |[]->esecr.neutre
     |tete::queue->
-		let ((nq,nmem),aecrire) = (delteta ((q,mem),tete)) in 
+		let ((nq,nmem),aecrire) = (delteta ((q,mem),tete)) in
 		esecr.operation
 			aecrire
 			(
@@ -82,13 +82,13 @@ let rec deltetaetoile_det_quiecrit_avecmemoire (esecr,(qq,i,f,delteta)) ((q,mem)
 				(esecr,(qq,i,f,delteta))
 				((nq,nmem),queue)
 			)
-	
+
 
 let rec deltetaetoile_det_quiecrit (esecr,(qq,i,f,delteta)) (q,m) =
 	let delta = (
-		fun ((q,dejaecrit),l) -> 
+		fun ((q,dejaecrit),l) ->
 			let nq,aecrire = (delteta (q,l)) in
-			(nq,esecr.operation dejaecrit aecrire) 
+			(nq,esecr.operation dejaecrit aecrire)
 		)
 		in  let (a,b) = (deltaetoile_det (qq,i,f,delta) (q,m)) in b
 
@@ -97,7 +97,7 @@ let executeautomate (esecr,(qq,i,f,delteta)) m = deltetaetoile_det_quiecrit (ese
 (*automate priorisant avec un puits *)
 let rec deltaetoile_prio_quiecrit (qq,i,f,delta) puits ((q,aecr),m) = match m with
 	|[] -> f (q,aecr)
-	|x::xs ->(*print_string "banana ";*) if q=puits then false else 
+	|x::xs ->(*print_string "banana ";*) if q=puits then false else
 			  let suivants = delta ((q,aecr),x) in
 			  unvrai (fun unq -> deltaetoile_prio_quiecrit (qq,i,f,delta) puits (unq,xs)) suivants
 
@@ -110,18 +110,18 @@ let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) 
 	(* print_string (implode m);print_string " : ";print_string (implode aecr.(0));print_newline (); *)
 	match m with
 	|[] -> ((f (q,aecr)),esecr.neutre)
-	|x::xs -> 
+	|x::xs ->
 		if q=puits then (false,esecr.neutre) else
 		unvraiteretourne
 			(
-				fun (unq,motdureste) -> 
-					let (a,b) = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in 
+				fun (unq,motdureste) ->
+					let (a,b) = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in
 					(a,concat motdureste b)
 			)
 			(delteta ((q,aecr),x))
             neutre
 
-            
+
 
 
 
@@ -136,59 +136,59 @@ let espaceecriture_mots = {neutre = [] ; operation =  fun x y -> x@y}
 
 (*##### l'espace d'ecriture autoprio #####*)
 
-type ('q, 'sm, 's, 't) typautoprio = 
-	AutoVide | 
-	Aut of char*(('q, 's, 't) automate_priorisant_quiecrit) | 
+type ('q, 'sm, 's, 't) typautoprio =
+	AutoVide |
+	Aut of (('q, 's, 't) automate_priorisant_quiecrit) |
 	AutDom of char*(('q, 's, 't) automate_priorisant_quiecrit)
 
 (*##### la concatenation sur le l'espace d'ecriture autoprio #####*)
-let rec ajoufin autoa autob lpass = 
-	let (especr1,(leq1,i1,f1,d1))=autoa in 
+let rec ajoufin autoa autob lpass =
+	let (especr1,(leq1,i1,f1,d1))=autoa in
 	let (especr2,(leq2,i2,f2,d2))=autob in
-	let d3 (q,l) = 
-		if leq1 q 
-		then 
+	let d3 (q,l) =
+		if leq1 q
+		then
 			(if ((f1 q) && (l=lpass))
-			then 
-				(i2)@(d1 (q,l)) 
-			else 
-				d1 (q,l)) 
-		else 
+			then
+				(i2)@(d1 (q,l))
+			else
+				d1 (q,l))
+		else
 			d2 (q,l)
 		in
 	let leq3 q = (leq1 q)||(leq2 q) in
 	(especr1,(leq3,i1,f2,d3))
 
-let rec agraphefin autoa autob = 
-	let (especr1,(leq1,i1,f1,d1))=autoa in 
+let rec agraphefin autoa autob =
+	let (especr1,(leq1,i1,f1,d1))=autoa in
 	let (especr2,(leq2,i2,f2,d2))=autob in
 	let phi (q,aecr) = fun (a,b)-> if a= fst (List.hd i2) then (q,b) else (a,b) in
-	let d3 (q,l) = 
-		if (leq1 q) 
+	let d3 (q,l) =
+		if (leq1 q)
 		then
-			if (f1 q) 
-			then 
+			if (f1 q)
+			then
 				(d1 (q,l))@(List.map (phi q) (d2 (List.hd i2,l)))
 			else
 				d1 (q,l)
 		else
 			List.map (phi q) (d2 (q,l)) in
 	let leq3 (q,aecr) = if q=(fst (List.hd i2)) then false else (leq1 (q,aecr))||(leq2 (q,aecr)) in
-    let f3 (q,aecr) = (f1 ( (q,aecr) ) ) in 
+  let f3 (q,aecr) = (f1 ( (q,aecr) ) ) in
 	(especr1,(leq3,i1,f3,d3))
 
 let rec concat_autoprio auta autb = match (auta,autb) with
 	|AutoVide,AutoVide -> AutoVide
 	|AutoVide,Aut(db,lautob) -> autb
 	|AutoVide,AutDom(d,lautob) -> autb
-	|Aut(d,lautoa),AutoVide -> auta
+	|Aut(lautoa),AutoVide -> auta
 	|AutDom(da,lautoa),AutoVide -> auta
-	|Aut(da,lautoa),Aut(db,lautob) -> auta
+	|Aut(lautoa),Aut(lautob) -> auta
 	|AutDom(da,lautoa),AutDom(db,lautob) -> AutDom('%', ajoufin lautoa lautob db)
-	|Aut(da,lautoa),AutDom(db,lautob) -> AutDom('%',ajoufin lautoa lautob db)
-	|AutDom(da,lautoa),Aut(db,lautob) -> Aut('%',agraphefin lautoa lautob)
+	|Aut(lautoa),AutDom(db,lautob) -> AutDom('%',ajoufin lautoa lautob db)
+	|AutDom(da,lautoa),Aut(lautob) -> Aut(agraphefin lautoa lautob)
 
-(*##### l'espace d'ecriture autoprio #####*)		
+(*##### l'espace d'ecriture autoprio #####*)
 let autoprio = {neutre = AutoVide ; operation = concat_autoprio}
 
 
@@ -200,7 +200,7 @@ type type_dansph = (char list) array
 let arraybase n i l = let res = Array.make n [] in res.(i) <- [l];res
 let arrayvide n = Array.make n []
 
-let concat_dansph x y = 
+let concat_dansph x y =
 	let n = (Array.length x) in
 	let res = Array.make n [] in
 	for i=0 to n-1 do res.(i)<-x.(i)@y.(i);done;
@@ -210,12 +210,11 @@ let dansph n = {neutre = arrayvide n; operation = concat_dansph}
 
 
 
- 
+
 
 (*##### autobrique #####*)
-let recoph n id a delim = 
+let recoph n id a =
 	Aut(
-		delim,
 		(
 			(dansph n),
 			(
@@ -227,7 +226,7 @@ let recoph n id a delim =
 		)
 	)
 
-let autobrique n id puits lett = 
+let autobrique n id puits lett =
 	AutDom(
 		lett,
 		(
@@ -248,39 +247,39 @@ let autobrique n id puits lett =
 (*##### l'automagique #####*)
 let incr (pe,s,a,b) = (pe+1,s,a,b)
 
-let lindice l e = let res = ref (-1) in for i=0 to (Array.length l)-1 do if l.(i) = e then (res:=i); done;!res 
+let lindice l e = let res = ref (-1) in for i=0 to (Array.length l)-1 do if l.(i) = e then (res:=i); done;!res
 
 let chiffres = [|'0';'1';'2';'3';'4';'5';'6';'7';'8';'9'|]
 
 let chiffre  e = lindice chiffres e
 
-let deltadugrosautomate acc n ((q,mem),l) = 
-	let demande_autobrique lett =  let res = autobrique n (!acc) (-1) lett in (*print_string "ajoute autobrique ";print_int (!acc);print_string " ";print_string (Char.escaped lett);print_newline ();*)acc:=(!acc)+1;res in 
-	let demande_recoph a delim = let res = recoph n (!acc) a delim in (*print_string "ajoute recoph ";print_int (!acc);print_string " ";print_string (Char.escaped delim);print_newline ();*)acc:=(!acc)+1;res in
+let deltadugrosautomate acc n ((q,mem),l) =
+	let demande_autobrique lett =  let res = autobrique n (!acc) (-1) lett in (*print_string "ajoute autobrique ";print_int (!acc);print_string " ";print_string (Char.escaped lett);print_newline ();*)acc:=(!acc)+1;res in
+	let demande_recoph a = let res = recoph n (!acc) a in (*print_string "ajoute recoph ";print_int (!acc);print_string " ";print_string (Char.escaped delim);print_newline ();*)acc:=(!acc)+1;res in
 	let rec autodelim s = match s with
 		|[] -> AutoVide
 		|[x]-> AutoVide
 		|tete::queue -> concat_autoprio (demande_autobrique tete) (autodelim queue) in
-    let rec fung (s,a,b) = 
+    let rec fung (s,a,b) =
         if a > b then AutoVide else
-        if a = b then (demande_recoph a '%')
-        else concat_autoprio (concat_autoprio (demande_recoph a (List.hd s)) (autodelim s) ) (fung (s,a+1,b)) in
+        if a = b then (demande_recoph a)
+        else concat_autoprio (concat_autoprio (demande_recoph a) (autodelim s) ) (fung (s,a+1,b)) in
     let (pe,s,a,b) = mem in
     let erreur () = failwith ("ERREUR a la position "^(string_of_int pe)^", etat "^(string_of_int q)^", lettre "^(Char.escaped l)) in
     match q with
         |0 -> if l='%' then ((1,(pe+1,[],0,0)),AutoVide)
                 else ((0,(incr mem)),(demande_autobrique l))
-        |1 -> if l='%' then ((0,incr mem),AutoVide) else 
+        |1 -> if l='%' then ((0,incr mem),AutoVide) else
                 if l='|' then ((2,incr mem),AutoVide)
                 else ((1,(pe+1,s@[l],a,b)),AutoVide)
-        |2 -> if l=';' then ((2,(pe+1,s,0,0)),(demande_recoph a '%')) else 
+        |2 -> if l=';' then ((2,(pe+1,s,0,0)),(demande_recoph a)) else
                 let lc = (chiffre l) in if lc>=0 then ((2,(pe+1,s,10*a+lc,b)),AutoVide) else
-                if l='a' then ((3,(pe+1,s,0,n)),AutoVide) else 
+                if l='a' then ((3,(pe+1,s,0,n)),AutoVide) else
                 if l='-' then ((3,incr mem),AutoVide) else
                 if l='%' then ((0,incr mem),AutoVide) else
                 erreur ()
-        |3 -> if l=';' then ((2,(pe+1,s,0,0)),(fung (s,a,b))) else 
-                let lc = (chiffre l) in if lc>=0 then ((3,(pe+1,s,a,10*b+lc)),AutoVide) else 
+        |3 -> if l=';' then ((2,(pe+1,s,0,0)),(fung (s,a,b))) else
+                let lc = (chiffre l) in if lc>=0 then ((3,(pe+1,s,a,10*b+lc)),AutoVide) else
                 erreur ()
         |_ -> failwith "ETAT NON ATTEIGNABLE"
 
@@ -296,13 +295,13 @@ let legrosautomate n = (autoprio,((fun x->true),((0,(0,[],0,0)),letatinitial n),
 let ajoutelafin n aut puits etafin = match aut with
 	|AutoVide->AutoVide
 	|AutDom(d,lauto)->aut
-	|Aut(d,lauto)-> concat_autoprio aut (recoph n etafin 0 '%')
+	|Aut(d,lauto)-> concat_autoprio aut (recoph n etafin 0)
 
 let prendlautquiecr aut = match aut with
     |AutoVide -> failwith "pas d'autoQe ici"
     |AutDom(l,levraiautoqe) -> levraiautoqe
-    |Aut(l,levraiautoqe) -> levraiautoqe
+    |Aut(levraiautoqe) -> levraiautoqe
 
-let levaluation mot (exp_pattern,n) = 
-    let levraiauto = prendlautquiecr (ajoutelafin n (executeautomate (legrosautomate n) (explode exp_pattern)) (-1) (-2)) in 
+let levaluation mot (exp_pattern,n) =
+    let levraiauto = prendlautquiecr (ajoutelafin n (executeautomate (legrosautomate n) (explode exp_pattern)) (-1) (-2)) in
     deltetaetoile_prio_quiecrit levraiauto (-1) ((0,arrayvide n),mot)

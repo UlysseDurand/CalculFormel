@@ -32,10 +32,10 @@
 
 \newtheorem{implementation}{Imp\'ementation OCaml}[section]
 \newcommand{\warncharlist}{{\color{blue}(On confond \codecml{string} et \codecml{char list})}}
-\newcommand*{\unefiguregraphic}[2]{\begin{figure}[!h] \centering \includegraphics{#1} \caption{#2} \end{figure}}
-\newcommand*{\unefiguregraphicsimple}[1]{\begin{figure}[!h] \centering \includegraphics{#1}\end{figure}}
-\newcommand*{\unefiguretikz}[2]{\begin{figure}[!h] \centering \input{figures/#1.tikz} \caption{#2} \end{figure}}
-\newcommand*{\unefiguretikzsimple}[1]{\begin{figure}[!h] \centering \input{figures/#1.tikz}\end{figure}}
+\newcommand*{\unefiguregraphic}[2]{\begin{figure}[!ht] \centering \includegraphics{#1} \caption{#2} \end{figure}}
+\newcommand*{\unefiguregraphicsimple}[1]{\begin{figure}[!ht] \centering \includegraphics{#1}\end{figure}}
+\newcommand*{\unefiguretikz}[2]{\begin{figure}[!ht] \centering \input{figures/#1.tikz} \caption{#2} \end{figure}}
+\newcommand*{\unefiguretikzsimple}[1]{\begin{figure}[!ht] \centering \input{figures/#1.tikz}\end{figure}}
 
 \newcommand{\chcar}[1]{{\fontfamily{lmtt}\selectfont \color{codepurple}\textit{#1}}}
 \newcommand{\codecml}[1]{\colorbox{backcolour}{\fontfamily{phv}\selectfont #1}}
@@ -366,7 +366,7 @@ La tache sera d\'ecoup\'ee en deux \'etapes, il faut construire l'automate \`a p
 Construisons alors les fonctions \codecml{automate\_de\_pattern} et \codecml{parselatex}.
 
 \subsection{\codecml{automate\_de\_pattern}}
-Comme dit pr\'ecedemment, \codecml{automate\_de\_pattern} sera la fonction associ\'ee \`a un automate qui ecrit ressortant l'automate voulu.\\
+Comme dit pr\'ecedemment, \codecml{automate\_de\_pattern} sera la fonction associ\'ee \`a un automate qui ecrit (qui sera appel\'e \codecml{autoMagique}) ressortant l'automate voulu.\\
 Par n\'ecessit\'e, nous allons g\'eneraliser le type de sortie d'un automate qui \'ecrit, en introduisant les espaces d'\'ecriture.
 \subsubsection{Espace d'\'ecriture}
 Quand on a un automate qui \'ecrit, l'espace dans lequel il \'ecrit a besoin de trois choses :
@@ -375,7 +375,7 @@ Quand on a un automate qui \'ecrit, l'espace dans lequel il \'ecrit a besoin de 
     \item une op\'eration appel\'ee concat\'enation de type \codecml{'a -> 'a -> 'a}
     \item un neutre \codecml{e} de type \codecml{'a} tel que $\forall$ \codecml{x} $\in$ \codecml{'a},  \codecml{concat x e = x}
 \end{itemize}
-Par exemple pour l'automate de \codecml{evaluelatex}, l'espace d'ecriture est celui des mots, alors son type est \codecml{char list}, sa concat\'enation est \codecml{fun a b -> a@b} et son neutre est \codecml{[]}.\\\\
+Par exemple pour l'automate de \codecml{evaluelatex}, l'espace d'ecriture est celui des mots, que l'on appelera espace d'\'ecriture \codecml{classique}, alors son type est \codecml{char list}, sa concat\'enation est \codecml{fun a b -> a@b} et son neutre est \codecml{[]}.\\\\
 Ici nous aurons besoin des espaces d'\'ecriture suivants : \codecml{dansph} (ph pour placeholder) et autoprio.\\
 \codecml{dansph} est alors d\'efini ainsi :
 \begin{lstlisting}
@@ -394,21 +394,49 @@ let dansph n = {neutre = arrayvide n; operation = concat_dansph}
 
 Pour ce qui est de \codecml{autoprio}, il sera bien plus long \`a expliquer, cela constituera alors une prochaine partie.
 
-\subsubsection{\codecml{autoMagique}}
+\subsection{\codecml{autoMagique}}
+L'automate retourn\'e par autoMagique doit alors reconna\^itre un \codecml{char list} et son espace d'\'ecriture sera \codecml{dansph}, ainsi dans le tableau qu'il retournera, \`a l'indice $i$ on retrouvera ce qu'il y a dans \`a la place du placeholder $i$.
 Pour reconna\^itre par exemple le motif en LanguInv suivant : \chcar{frac{\%|0;\%}{\%|1;\%}}, le premier automate inagin\'e \'etait celui figure 3.
 \unefiguretikz{autonaif}{Automate naïf}
 Mais avec cet automate d\'eterministe, on rencontre vite un probl\`eme.\\
-Pour \chcar{frac\{\{aHA\}\}\{bab\}}, l'automate retournera \`a l'\'etat 6 \codecml{[|}\chcar{\{aHA}\codecml{,[]|]}.\\
+Pour \chcar{frac\{\{aHA\}\}\{bab\}}, l'automate retournera \`a l'\'etat 6 \codecml{[|\chcar{"\{aHA"},[]|]}, et sera bloqu\'e.\\
 Pour rem\'edier \`a ce probl\`eme, l'id\'ee est de passer par un automate non d\'eterministe, o\`u \`a l'\'etat 5, pour la lettre \chcar{\}}, il y ait une transition vers l'\'etat 6 et une vers l'\'etat 5.\\
 Ainsi deux parcours de l'automate seront possibles :
 \begin{itemize}
   \item Le parcours d\'ecrit pr\'ec\'edement, qui \'echoue \`a l'\'etape 6
   \item Le parcours qui reste \`a 5 apr\`es avoir reconnu une premi\`ere fois \chcar{\{}
 \end{itemize}
-Ce dernier parcours reconna\^it bien le mot et retournera le r\'esultat attendu : \codecml{[|\chcar{aHA};\chcar{bab}|]}\\
+Ce dernier parcours reconna\^it bien le mot et retournera le r\'esultat attendu : \codecml{[|\chcar{"aHA"};\chcar{"bab"}|]}\\
 Alors c'est maintenant la question de comment construire cet automate qui \'ecrit avec un autre automate qui \'ecrit, l'autoMagique.\\\\
-L'id\'ee est la suivante : On va assembler des automates avec des op\'erations de concat\'enation bien sp\'ecifiques.\\\\
-Tout d'abordm uk
+L'id\'ee est la suivante : On va assembler des automates avec des op\'erations de concat\'enation bien sp\'ecifiques. Tout va r\'esider dans la d\'efinition de l'espace d'ecriture d'autoMagique, que l'on appelera \codecml{autoprio}.\\\\
+
+\subsection{L'espace d'\'ecriture \codecml{autoprio}}
+\subsubsection {Le type et le neutre}
+Dans cet \codecml{autoprio}, on aura deux "briques" principales, et si on concat\`ene une "brique" A \`a une "brique" B, on veut pas la m\^eme op\'eration de concat\'enation qu' en concat\'enant une "brique" B \`a une "brique" A.\\
+Alors on aura un type \codecml{typautoprio} en deux sous type (chacun associ\'e \`a une "brique").\\
+La premi\`ere "brique" sera appell\'ee \codecml{autobrique} et la deuxi\`eme \codecml{recoph}.\\
+
+{\Large TODO : AJOUTER FIGURE AUTOBRIQUE ET RECOPH}
+
+Alors, associ\'e \`a \codecml{autobrique} nous aurons le type \codecml{AutDom} (automate dominant), dans ce type on aura un \codecml{char} de renseign\'e (correspondant \`a un caract\`ere \`a reconnaitre pour aller d'un \'etat $i$ \`a un \'etat $i+1$), en plus d'un automate non d\'eterministe qui \'ecrit.\\
+Associ\'e \`a \codecml{recoph}, nous aurons le type \codecml{Aut} (automate), dans ce type nous aurons un \codecml{int} de renseign\'e (correspondant \`a un indice de placeholder), ainsi qu'un automate non d\'eterministe qui \'ecrit
+Enfin nous aurons un \codecml{AutoVide}, neutre pour notre concat\'enation.\\\\
+
+\subsubsection{La concat\'enation}
+Pour l'op\'eration de concat\'enation de \codecml{a} et \codecml{b} (a,b de type \codecml{typautoprio}), nous allons discerner les 4 cas suivants, utilisants les fonctions \codecml{ajoufin} et \codecml{agraphefin} :
+\begin{itemize}
+    \item \codecml{a = Aut(autoa)} et \codecml{Aut(b =autob)}, alors \codecml{concat\_autoprio a b} retournera\\ \codecml{a}
+    \item \codecml{a = AutDom(la,autoa)} et \codecml{b = Aut(autob)}, alors \codecml{concat\_autoprio a b} retournera\\ \codecml{Aut(agraphefin autoa autob)}
+    \item \codecml{a = Aut(autoa)} et \codecml{b = AutDom(lb,autob)}, alors \codecml{concat\_autoprio a b} retournera\\ \codecml{AutDom('\%',ajoufin autoa autob lb)}
+    \item \codecml{a = AutDom(la,autoa)} et \codecml{b = AutDom(lb,autob)}, alors \codecml{concat\_autoprio a b} retournera\\ \codecml{AutDom('\%', ajoufin autoa autob lb)}
+\\\\
+\codecml{ajoufin auta autb l} retournera l'automate o\`u on "ajoute" l'automate \codecml{autb} \`a la fin de l'automate \codecml{auta}.\\
+C'est \`a dire que l'on cr\'ee une nouvelle transition de tous les \'etats finaux de l'automate a vers l'\'etat initial de l'automate b, le nouvel \'etat initial est celui de \codecml{auta} et les nouveaux \'etats finaux sont ceux de \codecml{autb}.\\\\
+\codecml{agraphefin auta autb l} retournera l'automate o\`u on "agraphe" l'automate \codecml{autb} de mani\`ere \`a ce que l'\'etat final de \codecml{auta} se voit "fusionn\'e" avec l'\'etat initial de \codecml{autb}.\\
+C'est \`a dire que les transitions allant vers un \'etat final de \codecml{auta} sont redirig\'ees vers l'\'etat initial de \codecml{autb}.
+
+\end{itemize}
+
 
 
 

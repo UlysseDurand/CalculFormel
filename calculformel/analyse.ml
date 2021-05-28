@@ -1,11 +1,11 @@
 open Misc
-open Automate
-open Automate3
+open Automate_affiche
+open Automate_parse
 
 
 
 type operation = {nbvar : int ;affichage : string ; evaluation : float array->float ; derive : deriv}
-and expression = 
+and expression =
     C of float |
     V of int |
     F of operation * (expression array)
@@ -35,7 +35,7 @@ let rec compose f garr = match f with
 let rec derive k f = match f with
 	|C(x)->C(0.);
 	|V(i)-> if i=k then C(1.) else C(0.);
-	|F(g,va) -> match g.derive with 
+	|F(g,va) -> match g.derive with
 		|NonDeriv->failwith "Fonction non derivable !";
 		|Deriv(laf)->laf va (derive k)
 
@@ -47,20 +47,20 @@ let rec derive k f = match f with
 
 let rec plus = {
         nbvar=2;
-		affichage="%|0;%+%|1;%" ; 
-		evaluation = (fun v->v.(0) +. v.(1) ) ; 
+		affichage="%|0;%+%|1;%" ;
+		evaluation = (fun v->v.(0) +. v.(1) ) ;
 		derive = Deriv(fun ar d -> F(plus,[|d ar.(0);d ar.(1)|]) )
-	} 
+	}
 
 let rec oppose = {
         nbvar=1;
 		affichage="-%|0;%";
 		evaluation = (fun v-> 0.-.v.(0)) ;
     	derive = Deriv(fun ar d -> F(oppose, [|d ar.(0)|]))
-	} 
+	}
 
-let rec moins = 
-    let vraiefonction = F(plus,[|V 0 ; F(oppose, [| V(1) |] ) |] ) in   
+let rec moins =
+    let vraiefonction = F(plus,[|V 0 ; F(oppose, [| V(1) |] ) |] ) in
     {
         nbvar=2;
         affichage="%|0;%-%|1;%";
@@ -73,7 +73,7 @@ let rec fois = {
 	    affichage="(%|0;%)*(%|1;%)";
 	    evaluation = (fun v-> v.(0) *. v.(1) ) ;
     	derive = Deriv(fun ar d -> F(plus,[| F(fois,[|d ar.(0);ar.(1)|]) ; F(fois,[|ar.(0);d ar.(1)|]) |]))
-	} 
+	}
 
 let rec inverse = {
         nbvar=1;
@@ -82,8 +82,8 @@ let rec inverse = {
         derive = Deriv(fun ar d -> F(oppose,[|F(fois,[|d ar.(0) ; F(inverse,[|F(fois,[|ar.(0);ar.(0)|])|])|])|] ) )
 	}
 
-let rec divise = 
-    let vraiefonction = (F(fois, [| V 0 ; F(inverse, [|V 1|]) |] )) in    
+let rec divise =
+    let vraiefonction = (F(fois, [| V 0 ; F(inverse, [|V 1|]) |] )) in
     {
         nbvar=2;
         affichage="frac{%|0;%}{%|1;%}";
@@ -105,14 +105,14 @@ let rec exponentielle = {
 		derive = Deriv(fun ar d -> F(fois, [|d ar.(0);F(exponentielle,[|ar.(0)|])|] ))
 	}
 
-let exponentielle_base = 
+let exponentielle_base =
 	let vraiefonction = (F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ) in
 	{
 		nbvar=2;
-		affichage="%|0;%^{%|1;%}" ; 
+		affichage="%|0;%^{%|1;%}" ;
 		evaluation= evalue vraiefonction;
 		derive = Deriv(fun ar d -> d (compose vraiefonction ar) )
-	} 
+	}
 
 
 
@@ -122,7 +122,7 @@ let exponentielle_base =
 
 let unretourope lop lte c = let lc = Array.map lte c in F(lop,lc)
 
-let lesgrospatterns = 
+let lesgrospatterns =
 	[
 		("frac{%|0;%}{%|1;%}",2,unretourope divise);
 		(*("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));*)
@@ -140,11 +140,11 @@ let lesgrospatterns =
 		("%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) (C (float_of_string (implode c.(0))) ) )
     ]
 
- 
+
 
 (*##### le parser #####*)
 
-let rec parselatex lelatex = 
+let rec parselatex lelatex =
     (* print_string (implode lelatex);print_string " : : "; *)
 	(* print_newline (); *)
     unvraiteretourne
@@ -182,7 +182,7 @@ let rec arbre_pattern_match expr pattern n =
 						(* print_string "aHA ";print_bool a; *)
 						res:=(let c,d = !res in (a&&c,opeconc b d));
                     done;!res
-	
+
 
 
 
@@ -223,11 +223,11 @@ let rec simplifie expr =
     unvraiteretourne
         (fun (arbre_pat,n,unretour) ->
             let a,x = (arbre_pattern_match expr arbre_pat n ) in
-            if a then (a,(unretour (fun c -> let (d,e) = simplifiebis c in e) x)) else (false,expr) 
+            if a then (a,(unretour (fun c -> let (d,e) = simplifiebis c in e) x)) else (false,expr)
         )
         listesimplifications
         expr
-and simplifiebis expr = 
+and simplifiebis expr =
 	let (a,b) = simplifie expr in if a then simplifiebis b else match expr with
 	|F(ope,arr) -> (simplifie (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr)))
 	|_ -> (false,expr)
