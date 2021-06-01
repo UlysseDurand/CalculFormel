@@ -97,7 +97,7 @@ let executeautomate (esecr,(qq,i,f,delteta)) m = deltetaetoile_det_quiecrit (ese
 (*automate priorisant avec un puits *)
 let rec deltaetoile_prio_quiecrit (qq,i,f,delta) puits ((q,aecr),m) = match m with
 	|[] -> f (q,aecr)
-	|x::xs ->(*print_string "banana ";*) if q=puits then false else
+	|x::xs ->(*print_string "banana ";*) if q=puits then Erreur else
 			  let suivants = delta ((q,aecr),x) in
 			  unvrai (fun unq -> deltaetoile_prio_quiecrit (qq,i,f,delta) puits (unq,xs)) suivants
 
@@ -109,9 +109,9 @@ let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) 
 	let neutre,concat = esecr.neutre, esecr.operation in
 	(* print_string (implode m);print_string " : ";print_string (implode aecr.(0));print_newline (); *)
 	match m with
-	|[] -> ((f (q,aecr)),esecr.neutre)
+	|[] -> Ok(((f (q,aecr)),esecr.neutre))
 	|x::xs ->
-		if q=puits then (false,esecr.neutre) else
+		if q=puits then Erreur else
 		unvraiteretourne
 			(
 				fun (unq,motdureste) ->
@@ -119,7 +119,6 @@ let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) 
 					(a,concat motdureste b)
 			)
 			(delteta ((q,aecr),x))
-            neutre
 
 
 

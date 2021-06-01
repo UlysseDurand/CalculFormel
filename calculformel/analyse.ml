@@ -148,12 +148,11 @@ let rec parselatex lelatex =
     (* print_string (implode lelatex);print_string " : : "; *)
 	(* print_newline (); *)
     unvraiteretourne
-        (fun (expr_pat,n,unretour) ->
-            let a,x = (levaluation lelatex (expr_pat,n) ) in
-            if a then (a,(unretour (fun c -> let (d,e) = parselatex c in e) x)) else (false,C 0.)
+        (fun (expr_pat,n,retour) ->
+            let a = (levaluation lelatex (expr_pat,n) ) in
+            match a with |Ok(resa) then (retour (fun c -> match c with |Ok(resc) -> parselatex c |Erreur -> Erreur) resa) |Erreur -> Erreur
         )
         lesgrospatterns
-        (C 0.)
 
 let latex_en_expression x = snd (parselatex (explode x))
 
@@ -221,12 +220,11 @@ let rec simplifie expr =
     (* print_string (affiche expr);print_string " : : "; *)
 	(* print_newline (); *)
     unvraiteretourne
-        (fun (arbre_pat,n,unretour) ->
-            let a,x = (arbre_pattern_match expr arbre_pat n ) in
-            if a then (a,(unretour (fun c -> let (d,e) = simplifiebis c in e) x)) else (false,expr)
+        (fun (arbre_pat,n,retour) ->
+            let a = (arbre_pattern_match expr arbre_pat n ) in
+            match a with |Ok(resa)-> (retour (fun c -> match c with |Ok(resc) -> (simplifiebis c) |Erreur -> Erreur) resa) |Erreur-> Erreur
         )
         listesimplifications
-        expr
 and simplifiebis expr =
 	let (a,b) = simplifie expr in if a then simplifiebis b else match expr with
 	|F(ope,arr) -> (simplifie (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr)))
