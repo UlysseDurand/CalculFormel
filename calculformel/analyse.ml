@@ -120,24 +120,24 @@ let exponentielle_base =
 
 (*##### les pattern pour le parser #####*)
 
-let unretourope lop lte c = let lc = Array.map lte c in F(lop,lc)
+let unretourope lop lte c = let lc = Array.map lte c in Ok(F(lop,lc))
 
 let lesgrospatterns =
 	[
 		("frac{%|0;%}{%|1;%}",2,unretourope divise);
 		(*("frac{%|0;%}{%|1;%}",2,fun lte c -> let lc = Array.map lte c in F(fois,[| lc.(0) ; F(inverse,[| lc.(1) |]) |] ));*)
-		("{%|0;%}",1,fun lte c -> lte c.(0));
+		("{%|0;%}",1,fun lte c -> Ok(lte c.(0)));
 		("ln(%|0;%)",1, unretourope ln);
 		("exp(%|0;%)",1,unretourope exponentielle);
 		("(%|0;%*%|1;%)",2,unretourope fois);
-		("(%|0;%)",1,fun lte c -> lte c.(0));
+		("(%|0;%)",1,fun lte c -> Ok(lte c.(0)));
 		("%|0;%+%|1;%",2,unretourope plus);
 		("%|0;%-%|1;%",2,unretourope moins);
-		("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] ));
+		("%|0;%-%|1;%",2,fun lte c -> let lc = Array.map lte c in Ok(F(plus, [| lc.(0) ; F(oppose,[| lc.(1) |]) |] )));
 		("-%|0;%",1,unretourope oppose);
 		("%|0;%^%|1;%",2, unretourope exponentielle_base);
-		("x_%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) (V (int_of_string (implode c.(0))) ) );
-		("%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) (C (float_of_string (implode c.(0))) ) )
+		("x_%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) Ok(V (int_of_string (implode c.(0))) ) );
+		("%|0;%",1,fun lte c ->  (* print_string (implode c.(0)); *) Ok(C (float_of_string (implode c.(0))) ) )
     ]
 
 
@@ -150,7 +150,7 @@ let rec parselatex lelatex =
     unvraiteretourne
         (fun (expr_pat,n,retour) ->
             let a = (levaluation lelatex (expr_pat,n) ) in
-            match a with |Ok(resa) then (retour (fun c -> match c with |Ok(resc) -> parselatex c |Erreur -> Erreur) resa) |Erreur -> Erreur
+            match a with |Ok(resa) -> (retour (fun c -> parselatex c) resa) |Erreur -> Erreur
         )
         lesgrospatterns
 
@@ -173,14 +173,15 @@ let rec arbre_pattern_match expr pattern n =
             |C(y) -> (false, casbase ())
             |V(j) -> (false, casbase ())
             |F(oppe,arr)->
-				if not ( (Array.length arr) = (Array.length ar) && ope.affichage=oppe.affichage) then (false, casbase ()) else
-                let opeconc = (fun a b -> let res = casbase () in for i=0 to n-1 do if a.(i) = (C 0.) then (res.(i)<-b.(i)) else (res.(i)<-a.(i)) done;res) in
-                let res = ref (true,Array.make n (C 0.)) in
-                    for k=0 to (Array.length arr)-1 do
-						let (a,b) = arbre_pattern_match arr.(k) ar.(k) n in
-						(* print_string "aHA ";print_bool a; *)
-						res:=(let c,d = !res in (a&&c,opeconc b d));
-                    done;!res
+		if not ( (Array.length arr) = (Array.length ar) && ope.affichage=oppe.affichage) then Erreur else
+               let opeconc = (fun a b -> let res = casbase () in for i=0 to n-1 do if a.(i) = (C 0.) then (res.(i)<-b.(i)) else (res.(i)<-a.(i)) done;res) in
+               let res = ref Ok(Array.make n (C 0.)) in
+                   for k=0 to (Array.length arr)-1 do
+		        let a = arbre_pattern_match arr.(k) ar.(k) n in match a with
+		        	|Ok(resa) -> res:=(match (!res) with |Ok(resres)->Ok(opeconc resa resres) |Erreur -> Erreur);
+		        	|Erreur -> res:=Erreur;
+			(* print_string "aHA ";print_bool a; *)
+                    done;Ok(!res)
 
 
 
@@ -216,9 +217,9 @@ let listesimplifications = [
 
 (*##### le simplificateur #####*)
 
-let rec simplifie expr =
+let rec simplifiesimpl expr =
     (* print_string (affiche expr);print_string " : : "; *)
-	(* print_newline (); *)
+    (* print_newline (); *)
     unvraiteretourne
         (fun (arbre_pat,n,retour) ->
             let a = (arbre_pattern_match expr arbre_pat n ) in
@@ -226,6 +227,9 @@ let rec simplifie expr =
         )
         listesimplifications
 and simplifiebis expr =
-	let (a,b) = simplifie expr in if a then simplifiebis b else match expr with
-	|F(ope,arr) -> (simplifie (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr)))
-	|_ -> (false,expr)
+	let a = simplifiesimpl expr in 
+	match a with 
+		|Ok(resa) -> simplifiebis resa 
+		|Erreur -> match expr with
+			|F(ope,arr) -> Ok(simplifiesimpl (F(ope,Array.map (fun x -> snd (simplifiebis x)) arr)))
+			|x -> expr

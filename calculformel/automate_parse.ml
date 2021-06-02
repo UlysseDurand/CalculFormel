@@ -115,8 +115,8 @@ let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) 
 		unvraiteretourne
 			(
 				fun (unq,motdureste) ->
-					let (a,b) = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in
-					(a,concat motdureste b)
+					let a = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in
+					a
 			)
 			(delteta ((q,aecr),x))
 
