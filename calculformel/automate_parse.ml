@@ -106,17 +106,18 @@ let rec deltaetoile_prio_quiecrit (qq,i,f,delta) puits ((q,aecr),m) = match m wi
 (*avec l'espace d'ecriture 'sig qui a un vide et une operation de concatenation
 un automate priorisant qui ecrit dans 'sig ayant un puits (etat non final sans transition externe)*)
 let rec deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((q,aecr),m) =
-	let neutre,concat = esecr.neutre, esecr.operation in
+	let concat = esecr.operation in
 	(* print_string (implode m);print_string " : ";print_string (implode aecr.(0));print_newline (); *)
 	match m with
-	|[] -> Ok(((f (q,aecr)),esecr.neutre))
+	|[] -> if (f (q,aecr)) then Ok(esecr.neutre) else Erreur
 	|x::xs ->
 		if q=puits then Erreur else
 		unvraiteretourne
 			(
 				fun (unq,motdureste) ->
-					let a = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in
-					a
+					let a = deltetaetoile_prio_quiecrit (esecr,(qq,i,f,delteta)) puits ((unq,motdureste),xs) in match a with
+					|Ok(resa) -> Ok(concat motdureste resa)
+					|Erreur -> Erreur
 			)
 			(delteta ((q,aecr),x))
 

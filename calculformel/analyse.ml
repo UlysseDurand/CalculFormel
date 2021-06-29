@@ -154,7 +154,7 @@ let rec parselatex lelatex =
         )
         lesgrospatterns
 
-let latex_en_expression x = snd (parselatex (explode x))
+let latex_en_expression x = match parselatex (explode x) with |Erreur -> failwith "Lepattern-matching echoue" |Ok(resa) -> resa
 
 
 
@@ -165,13 +165,13 @@ let latex_en_expression x = snd (parselatex (explode x))
 let rec arbre_pattern_match expr pattern n =
     let casbase () = Array.make n (C 0.) in
     match pattern with
-        |C(x) -> (match expr with
-            |C(y) -> (x=y,casbase ())
-            |_ -> (false, casbase ()))
-        |V(i) -> (true, let res=(casbase ()) in res.(i) <- expr ; res)
+        |C(x) -> match expr with
+            |C(y) -> Ok(casbase ())
+            |_ -> Erreur
+        |V(i) -> let res=(casbase ()) in res.(i) <- expr ; Ok(res)
         |F(ope,ar) -> match expr with
-            |C(y) -> (false, casbase ())
-            |V(j) -> (false, casbase ())
+            |C(y) -> Erreur
+            |V(j) -> Erreur
             |F(oppe,arr)->
 		if not ( (Array.length arr) = (Array.length ar) && ope.affichage=oppe.affichage) then Erreur else
                let opeconc = (fun a b -> let res = casbase () in for i=0 to n-1 do if a.(i) = (C 0.) then (res.(i)<-b.(i)) else (res.(i)<-a.(i)) done;res) in
@@ -192,22 +192,22 @@ let rec arbre_pattern_match expr pattern n =
 
 let listesimplifications = [
         (F(oppose,[| C 0.|]), 0, fun sim c -> C 0.);
-		(F(fois,[| V 0 ; F(oppose,[|V 1|]) |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
-		(F(fois,[| F(oppose,[|V 1|]) ; V 0 |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
+	(F(fois,[| V 0 ; F(oppose,[|V 1|]) |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
+	(F(fois,[| F(oppose,[|V 1|]) ; V 0 |]), 2,fun sim c -> F(oppose,[|F(fois,Array.map sim c)|]));
         (F(fois,[| C 0. ; V 0 |]),1,fun sim c -> C 0.);
         (F(fois,[| V 0 ; C 0. |]),1,fun sim c -> C 0.);
         (F(fois,[| C 1. ; V 0 |]),1,fun sim c -> (sim c.(0)) );
         (F(fois,[| V 0 ; C 1. |]),1,fun sim c -> (sim c.(0)) );
         (F(plus,[| V 0 ; C 0. |]),1,fun sim c -> (sim c.(0)) );
         (F(plus,[| C 0. ; V 0 |]),1,fun sim c -> (sim c.(0)) );
-		(F(moins,[| V 0 ; C 0. |]),1,fun sim c -> (sim c.(0)));
-		(F(moins,[| C 0. ; V 0 |]),1,fun sim c -> F(oppose,[|sim c.(0)|]));
+	(F(moins,[| V 0 ; C 0. |]),1,fun sim c -> (sim c.(0)));
+	(F(moins,[| C 0. ; V 0 |]),1,fun sim c -> F(oppose,[|sim c.(0)|]));
         (F(plus,[| V 0 ; F(oppose,[| V 1 |]) |]),2,fun sim c -> F(moins, Array.map sim c) );
-		(F(divise, [| V 0 ; F(divise, [|V 1; V 2 |] ) |]),3,fun sim c -> F(divise,[| F(fois,[|sim c.(0) ; sim c.(2)|]) ; sim c.(1)|]) );
-		(F(divise, [|F(divise, [|V 0 ; V 1 |] ) ; V 2 |]),3,fun sim c -> F(divise,[| sim c.(0) ; F(fois,[|sim c.(1) ; sim c.(2)|]) |]) );
-		(F(divise, [| F(inverse , [|V 0 |]) ; V 1 |]),2,fun sim c -> F(inverse,[|F(fois,Array.map sim c)|]));
-		(F(divise, [| V 0 ; F(inverse , [|V 1|]) |]),2,fun sim c -> F(fois,Array.map sim c));
-		(F(divise,[|C 1. ; V 0|]),1,fun sim c -> F(inverse, [|sim c.(0)|]) );
+	(F(divise, [| V 0 ; F(divise, [|V 1; V 2 |] ) |]),3,fun sim c -> F(divise,[| F(fois,[|sim c.(0) ; sim c.(2)|]) ; sim c.(1)|]) );
+	(F(divise, [|F(divise, [|V 0 ; V 1 |] ) ; V 2 |]),3,fun sim c -> F(divise,[| sim c.(0) ; F(fois,[|sim c.(1) ; sim c.(2)|]) |]) );
+	(F(divise, [| F(inverse , [|V 0 |]) ; V 1 |]),2,fun sim c -> F(inverse,[|F(fois,Array.map sim c)|]));
+	(F(divise, [| V 0 ; F(inverse , [|V 1|]) |]),2,fun sim c -> F(fois,Array.map sim c));
+	(F(divise,[|C 1. ; V 0|]),1,fun sim c -> F(inverse, [|sim c.(0)|]) );
         (F(fois,[| V 0 ; F(inverse, [|V 1|] ) |]), 2, fun sim c -> F(divise, Array.map sim c) );
         (F(fois,[| F(inverse, [|V 1|] ) ; V 0 |]), 2, fun sim c -> F(divise, Array.map sim c) );
         ((F(exponentielle, [|F(fois,[|V 1 ; F(ln,[|V 0|]) |])|]) ),2, fun sim c -> F(exponentielle_base,Array.map sim c))

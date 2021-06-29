@@ -457,7 +457,7 @@ Nous utiliserons alors une fonction \codecml{unvrai : 'a list -> ('a -> bool*'b)
 \subsubsection{Que faire de ces motifs}
 On a une liste de pattern, mais on veut faire du pattern-matching, donc \`a chaque pattern, on veut associer un "match", c'est \`a dire renseigner ce que l'on renvoit en fonction du retour de l'automate associ\'e au pattern. Ce "match" sera une fonction prenant en entr\'ee \`a la fois le retour de l'automate associ\'e au motif, mais prendra aussi la fonction \codecml{parse\_latex} pour pouvoir \'eventuellement l'appliquer r\'ecursivement.\\\\
 Voil\'a \`a quoi peut ressembler le pattern-match associ\'e \`a l'op\'eration d'addition :\\
-\codecml{\chcar{"\%|0;\%+\%|1;\%"},fun retour parse -> F(plus,[|parse retour.(0) ; parse retour.(1)|])}
+\codecml{(\chcar{"\%|0;\%+\%|1;\%"},fun retour parse -> F(plus,[|parse retour.(0) ; parse retour.(1)|]))}
 
 \subsubsection{\codecml{parse\_latex}}
 Maintenant que nous avons tous les \'elements, nous pouvons enfin de nous lancer dans la construction de \codecml{parse\_latex}.\\
@@ -474,3 +474,4 @@ Mais ainsi on aura pas totalement simplifi\'e notre expression, donc une derni\`
 \end{document}
 
 %TODO : changer dans automate.ml rendv en rendph
+
